@@ -60,16 +60,33 @@ Update `AGENTS.md` and write `docs/workflow.md`: how work is delegated (codex re
 claude subagents, max two concurrent), review gates, test commands, release steps.
 
 ### Task 5: Scaffold
-uv workspace per SPEC: `packages/mcruft` (core model, `.mcruft` read/write, engine
-registry, CLI + MCP engine adapters), `packages/mcruft_<app>` x5 (engine declarations),
-one maturin native-binding skeleton, the bundled-wheel mechanism (script that vendors
-the `<app>-cli` binary into a platform wheel). Tests run with `uvx hatch test` or
-`uv run pytest`.
+Per SPEC.md §3, §4, §6 and §9, set up a uv workspace with these parts:
+- `packages/mcruft`:
+  - the model
+  - `.mcruft` package I/O following the §3 rules
+  - Report, Loss and the errors
+  - a router with entry-point discovery
+  - a CLI runner
+  - a lib engine covering the §4 inspect table
+  - an MCP session under the `[mcp]` extra
+- `packages/mcruft_<product>` ×5: engine declarations (binary lookup, version, the capabilities from §5). Adapters may be stubs that raise `UnsupportedRoute` until Task 6.
+- `native/mcruft_pdfcraft_native`: a maturin skeleton, kept outside the workspace.
+- `tools/bundle_cli.py`: builds the arm64 `mcruft-<product>-bin` wheel.
+
+Gates: `uv run ruff check .` and `uv run pytest -q`.
 
 ### Task 6: MVP operations
-Implement end-to-end: open/inspect (pdf, pptx, svg, png), page split/merge, export to
-pdf/png/svg, pdf → pages in a `.mcruft` package, editable vs fidelity conversion for at
-least pptx→pdf and pdf→svg, with tests against the real CLIs (skipped when missing).
+Implement the SPEC §5 routes and the §5.2 export pipeline end to end:
+- open/inspect for pdf, pptx, svg and png
+- `add_file`
+- manifest-level split/merge
+- save/load with previews
+- export to pdf, png, svg and pptx under both policies
+- convert pptx→pdf and pdf→svg under both policies
+- the outline pass
+- page-level `edit_in`
+
+Tests run against the real CLIs, are skipped when a binary is missing, and write only under `tmp_path`.
 
 ### Task 7: Publish
 Quality gate (slop clean, verification, code review), README/CHANGELOG, push to GitHub.
