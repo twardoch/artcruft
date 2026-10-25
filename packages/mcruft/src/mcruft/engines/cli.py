@@ -1,5 +1,7 @@
 # this_file: packages/mcruft/src/mcruft/engines/cli.py
 import importlib
+import json
+import math
 import os
 import re
 import shlex
@@ -27,6 +29,37 @@ def parse_version(text: str) -> str:
     if match is None:
         raise EngineFailed(f"No version number in CLI output: {text[:200]}")
     return match[0]
+
+
+def page_indexes(pages: list[int] | None, count: int) -> list[int]:
+    indexes = list(range(count)) if pages is None else list(pages)
+    if not indexes:
+        raise ValueError("Select at least one page")
+    if any(type(i) is not int or i < 0 or i >= count for i in indexes):
+        raise IndexError(f"Page indexes must be integers in 0..{count - 1}")
+    return indexes
+
+
+def pixel_scale(dpi: float) -> float:
+    if not math.isfinite(dpi) or dpi <= 0:
+        raise ValueError("DPI must be finite and positive")
+    return dpi / 72
+
+
+def json_warnings(value) -> list[str]:
+    if isinstance(value, list):
+        return [warning for item in value for warning in json_warnings(item)]
+    if not isinstance(value, dict):
+        return []
+    return [
+        warning
+        for key, item in value.items()
+        for warning in (
+            item
+            if key in ("warnings", "importWarnings") and isinstance(item, list)
+            else json_warnings(item)
+        )
+    ]
 
 
 class CliEngine(Engine):
@@ -68,6 +101,32 @@ class CliEngine(Engine):
         ):
             report.warnings.append(f"{self.name} {current} is older than {self.MIN_VERSION}")
         return report
+
+    def check_route(self, op: str, src: Path, dst: Path, policy: Policy) -> None:
+        if op == "inspect" or not any(
+            (c.op, c.src, c.dst, c.policy)
+            == (op, src.suffix.lower()[1:], dst.suffix.lower()[1:], policy)
+            for c in self.capabilities()
+        ):
+            raise UnsupportedRoute(f"{self.name}: {op} {src.suffix} -> {dst.suffix} ({policy})")
+
+    def call(self, args: list[str | Path], report: Report | None = None) -> str:
+        binary = self.binary()
+        if binary is None:
+            raise EngineUnavailable(f"Missing {self.PRODUCT}-cli")
+        result = run_cli([binary, *args])
+        if report is not None:
+            for line in result.stdout.splitlines():
+                try:
+                    report.warnings.extend(json_warnings(json.loads(line)))
+                except json.JSONDecodeError:
+                    pass  # Some CLIs print human-readable progress instead of JSON.
+            report.warnings.extend(
+                line.removeprefix("warning: ")
+                for line in result.stderr.splitlines()
+                if line.startswith("warning: ")
+            )
+        return result.stdout
 
     def run(self, op: str, src: Path, dst: Path, *, policy: Policy, **opts) -> Report:
         raise UnsupportedRoute("implemented in Task 6")

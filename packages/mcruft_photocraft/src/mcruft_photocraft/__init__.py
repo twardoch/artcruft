@@ -1,6 +1,20 @@
 # this_file: packages/mcruft_photocraft/src/mcruft_photocraft/__init__.py
+import json
+from pathlib import Path
+
 from mcruft.engines.base import Capability
 from mcruft.engines.cli import CliEngine
+from mcruft.report import Policy, Report
+
+CONVERSIONS = [
+    ("png", "psd", "editable"),
+    ("jpg", "psd", "editable"),
+    ("psd", "pcraft", "editable"),
+    ("psd", "png", "fidelity"),
+    ("pcraft", "png", "fidelity"),
+    ("png", "pdf", "fidelity"),
+    ("jpg", "pdf", "fidelity"),
+]
 
 
 class PhotocraftEngine(CliEngine):
@@ -8,17 +22,26 @@ class PhotocraftEngine(CliEngine):
     MIN_VERSION = "0.15.1"
 
     def capabilities(self) -> list[Capability]:
-        return [
-            Capability("convert", "png", "pdf", "fidelity", "photocraft-cli 0.15.1", "Raster PDF"),
-            Capability("convert", "png", "psd", "editable", "photocraft-cli 0.15.1", ""),
-            Capability("convert", "png", "psd", "fidelity", "photocraft-cli 0.15.1", ""),
-            Capability("convert", "psd", "png", "editable", "photocraft-cli 0.15.1", ""),
-            Capability("convert", "psd", "png", "fidelity", "photocraft-cli 0.15.1", ""),
-            Capability("convert", "psd", "pcraft", "editable", "photocraft-cli 0.15.1", ""),
-            Capability("convert", "psd", "pcraft", "fidelity", "photocraft-cli 0.15.1", ""),
-            Capability("inspect", "psd", "psd", "editable", None, "Task 6 info adapter"),
-            Capability("inspect", "pcraft", "pcraft", "editable", None, "Task 6 info adapter"),
-        ]
+        routes = [("convert", *row) for row in CONVERSIONS]
+        routes += [("inspect", ext, ext, "editable") for ext in ("psd", "pcraft")]
+        return [Capability(*row, f"{self.PRODUCT}-cli {self.MIN_VERSION}") for row in routes]
+
+    def inspect(self, path: Path) -> list[tuple[float, float]]:
+        path = Path(path)
+        if path.suffix.lower() not in (".psd", ".pcraft"):
+            return super().inspect(path)
+        info = json.loads(self.call(["info", path, "--compact"]))
+        dpi = info.get("resolution", 72)
+        if dpi <= 0:
+            raise ValueError("Image DPI must be positive")
+        return [(info["width"] * 72 / dpi, info["height"] * 72 / dpi)]
+
+    def run(self, op: str, src: Path, dst: Path, *, policy: Policy, **opts) -> Report:
+        src, dst = Path(src), Path(dst)
+        self.check_route(op, src, dst, policy)
+        report = self.report(op, policy, [dst])
+        self.call(["convert", src, dst], report)
+        return report
 
 
 engine = PhotocraftEngine()
