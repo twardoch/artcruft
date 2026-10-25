@@ -8,6 +8,10 @@ dependencies = ["pypdf", "python-pptx", "Pillow"]
 
 [project.optional-dependencies]
 mcp = ["mcp"]
+pdf = ["pypdfium2"]
+svg = ["resvg-py"]
+psd = ["psd-tools"]
+libs = ["pypdfium2", "resvg-py", "psd-tools"]
 engines = [
   "mcruft-vectorcraft", "mcruft-deckcraft", "mcruft-photocraft",
   "mcruft-pdfcraft", "mcruft-designcraft",

@@ -4,6 +4,28 @@ this_file: WORK.md
 
 # Work status
 
+## Optional native-format libraries (2026-10-25)
+
+- Added core-only `pdf`, `svg`, `psd` and combined `libs` extras; `engines` still
+  installs only product packages. Updated uv.lock and the spec, README and dependency list.
+- LibEngine delegates optional PDF rendering, SVG rendering and PSD inspection to
+  three small modules. Capabilities use `find_spec` and include package versions;
+  verified library routes win over CLI routes without router changes.
+- PDFium import, document/page/bitmap operations and cleanup share a module lock.
+  SVG uses zoom = dpi/96 with the parser fixed at 96 dpi, avoiding double scaling
+  physical units. PSD resolution is 16.16 fixed-point; missing metadata means 72 dpi.
+- Baseline: 139 tests passed. Before implementation, the new tests had 9 expected
+  failures (missing routes and CLI selection). Focused tests now pass all 25 cases:
+  page ordering/names, multiple DPIs, PSD resolution/fallback, verified routing,
+  absent modules, invalid page selections/DPI and PDFium lock coverage.
+- Public API checks passed: multi-page PDF conversion to numbered PNGs, SVG
+  `Page.render` at 96 dpi, and opening a PSD all use the library engine.
+- Final gates: `uv lock` and `uv sync --all-packages --all-extras` succeeded;
+  `uv run ruff check .` passed; `uv run ruff format --check .` reported 68 files
+  already formatted; `uv run pytest -q` finished with **164 passed in 30.18s**.
+  Used `UV_CACHE_DIR=/tmp/mcruft-uv-cache` because the default cache is outside the sandbox.
+  No product packages or vendor files edited; no commit made.
+
 ## Done (MVP, branch `mvp`)
 
 PLAN.md Tasks 1–6 are complete. Each code task passed an independent review, and the branch

@@ -9,6 +9,9 @@ this_file: DEPENDENCIES.md
 | pypdf | Inspect, extract and combine PDF pages |
 | python-pptx | Inspect presentation slide dimensions/count |
 | Pillow | Inspect image dimensions/DPI and render raster pages at the requested DPI |
+| pypdfium2 (`pdf` or `libs` extra) | Render selected PDF pages to PNG; bundled PDFium, calls serialized by a module lock |
+| resvg-py (`svg` or `libs` extra) | Render static SVG to PNG at the requested DPI; bundled Rust renderer, system fonts |
+| psd-tools (`psd` or `libs` extra) | Inspect PSD canvas dimensions and resolution without a CLI |
 | mcp (optional extra) | Official SDK stdio client |
 | hatchling + hatch-vcs | Pure Python builds and repository-derived versions |
 | pytest + ruff (dev group) | Offline tests, lint and formatting |

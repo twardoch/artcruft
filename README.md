@@ -53,6 +53,7 @@ mcruft never translates your files into a format of its own. See [SPEC.md](SPEC.
 
 The router picks an engine by capability, in the order verified, native, library, CLI, MCP.
 `mcruft.engines()` shows what is installed. The tested routes are in [SPEC.md](SPEC.md) §5.
+`mcruft[libs]` adds pypdfium2, resvg-py and psd-tools to the library engine, which the router prefers over CLIs.
 Each CLI is found through `$MCRUFT_<PRODUCT>_CLI`, then a bundled `mcruft-<product>-bin` wheel,
 then `PATH`. `engine.session()` opens the product's MCP server for interactive work
 (`mcruft[mcp]`).
@@ -83,9 +84,6 @@ These are not in the MVP:
 - Video and audio operations. FilmCraft, EffectCraft and SoundCraft are in batch 2, along with
   WordCraft, FigCraft, CADCraft, GridCraft and LightCraft.
 - Linux and Windows binary wheels.
-- Library engines for pypdfium2, resvg-py and psd-tools. They were chosen in
-  [docs/research/native-libs.md](docs/research/native-libs.md) but are not wired in yet. The MVP's
-  library engine uses pypdf, python-pptx and Pillow.
 
 ## Development
 

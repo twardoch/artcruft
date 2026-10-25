@@ -10,6 +10,7 @@ from pptx import Presentation
 from pypdf import PdfReader, PdfWriter
 
 from ..report import EngineFailed, Loss, Policy, Report, UnsupportedRoute
+from . import libs_pdfium, libs_psd, libs_resvg
 from .base import Capability, Engine, normalize_format
 from .cli import page_indexes, pixel_scale
 
@@ -66,6 +67,9 @@ class LibEngine(Engine):
         return (
             inspect
             + raster
+            + libs_pdfium.capabilities()
+            + libs_resvg.capabilities()
+            + libs_psd.capabilities()
             + [
                 Capability(op, "pdf", "pdf", policy, "lib pypdf")
                 for op in ("extract_pages", "combine")
@@ -87,6 +91,8 @@ class LibEngine(Engine):
                 return [(prs.slide_width / 12700, prs.slide_height / 12700)] * len(prs.slides)
             case ".svg":
                 return [svg_size(path)]
+            case ".psd" if libs_psd.capabilities():
+                return libs_psd.inspect(path)
             case ".png" | ".jpg" | ".jpeg":
                 with Image.open(path) as image:
                     dpi = image.info.get("dpi", (72, 72))
@@ -111,6 +117,10 @@ class LibEngine(Engine):
             or op == "inspect"
         ):
             raise UnsupportedRoute(f"lib: {op} ({policy})")
+        if Path(src).suffix.lower() == ".svg":
+            return libs_resvg.render(op, src, dst, policy, **opts)
+        if op == "export_pages" and Path(src).suffix.lower() == ".pdf":
+            return libs_pdfium.export_pages(src, dst, policy, **opts)
         if op == "export_pages":
             return self.render_image(src, dst, policy, **opts)
         writer = PdfWriter()

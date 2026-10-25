@@ -6,6 +6,10 @@ this_file: CHANGELOG.md
 
 ## Unreleased
 
+- Add optional `pdf`, `svg`, `psd` and combined `libs` extras. Prefer tested library
+  routes for PDF/SVG PNG rendering and PSD inspection; serialize PDFium calls, honour
+  page selection/DPI, and report rasterization losses and SVG system-font dependence.
+
 - Add the `mcruft[engines]` metapackage extra, which installs all five engine packages.
 
 - Support PSD/pcraft PDF export and previews, report flattened layers, and expose

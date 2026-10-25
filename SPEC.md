@@ -30,7 +30,8 @@ run on the cited input; ~ is documented but not run; ✗ is unsupported, with a 
    `[x0,y0,x1,y1]` and DeckCraft rects `[x,y,w,h]`; pixel images use their DPI metadata, else
    72 dpi (1 px = 1 pt).
 5. **Small core.** The `mcruft` core is pure Python, with dependencies limited to `pypdf`,
-   `python-pptx` and `Pillow`. Product engines are separate packages.
+   `python-pptx` and `Pillow`. The optional `libs` extra adds pypdfium2, resvg-py and
+   psd-tools; individual extras are `pdf`, `svg` and `psd`. Product engines are separate packages.
 
 ## 2. Object model
 
@@ -151,7 +152,8 @@ ops: convert, export_pages, outline_text, build_deck, extract_pages, combine   (
 | svg | lib: XML `viewBox`/`width`/`height` | one page |
 | png, jpg | lib: Pillow | one page, px → pt via DPI |
 | vectorcraft, ai | cli: `vectorcraft-cli info` | artboards |
-| psd, pcraft | cli: `photocraft-cli info` | one page |
+| psd | lib: psd-tools when installed, else `photocraft-cli info` | one page, px → pt via resolution (else 72 dpi) |
+| pcraft | cli: `photocraft-cli info` | one page |
 | idml, designcraft | cli: `designcraft-cli run --in X --cmd document.inspect` | pages |
 
 ## 5. Conversion and export matrix (MVP)
@@ -163,9 +165,9 @@ ops: convert, export_pages, outline_text, build_deck, extract_pages, combine   (
 | pptx → single-slide pdf | ✓ deckcraft `run --export x.pdf --export-params {"slides":[i]}` | same + outline pass |
 | pptx ↔ deckcraft | ✓ deckcraft `convert` | ✗ (same route; use editable) |
 | svg → pdf | ✓ vectorcraft `convert` (fonts embedded) | ✓ vectorcraft `run … type.createOutlines --export` (no fonts) |
-| svg → png | ✗ | ✓ vectorcraft `convert`; ~ lib resvg-py |
+| svg → png | ✗ | ✓ vectorcraft `convert`; ✓ lib resvg-py (extra `libs`) |
 | pdf → svg | ✓ vectorcraft `convert` (text stays `<text>`) | ✓ vectorcraft `run … type.createOutlines --export .svg` |
-| pdf → png | ✗ | ✓ pdfcraft `render --page N`; ~ lib pypdfium2 |
+| pdf → png | ✗ | ✓ pdfcraft `render --page N`; ✓ lib pypdfium2 (extra `libs`) |
 | pdf → pdf (outlined) | n/a | ✓ outline pass, 1-page and 4-page inputs |
 | pdf → psd | ✗ layers not rebuilt | ✓ vectorcraft `convert` |
 | png → pdf | as fidelity (an image has no structure to keep, so both policies use the same route; no Loss) | ✓ photocraft `convert` |
@@ -297,10 +299,7 @@ tools/bundle_cli.py              builds the mcruft-<product>-bin wheels
 ## 10. Out of scope for the MVP
 
 - Batch-2 products.
-- Library engines beyond pypdf, python-pptx and Pillow. pypdfium2 (pdf → png), resvg-py
-  (svg → png) and psd-tools (PSD layers) were selected in `docs/research/native-libs.md`, but are
-  not wired in yet. Their routes are marked "~" in §5. The first to add is pypdfium2 pdf → png,
-  which removes a CLI dependency.
+- Write routes through the libraries (pypdf-based authoring, psd-tools saving) are deferred.
 - Text editing: the planned `frame.set_text(str)` routes to DeckCraft `text.set` and DesignCraft
   `story.setText`.
 - Frame-level write-back.
