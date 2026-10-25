@@ -9,7 +9,7 @@ from PIL import Image
 from pptx import Presentation
 from pypdf import PdfReader, PdfWriter
 
-from ..report import EngineFailed, Policy, Report, UnsupportedRoute
+from ..report import EngineFailed, Loss, Policy, Report, UnsupportedRoute
 from .base import Capability, Engine, normalize_format
 from .cli import page_indexes, pixel_scale
 
@@ -138,16 +138,19 @@ class LibEngine(Engine):
         scale = pixel_scale(dpi)
         size = tuple(max(1, round(v * scale)) for v in self.inspect(src)[0])
         outputs = []
+        losses = []
         try:
             with Image.open(src) as image:
+                if image.info.get("icc_profile"):
+                    losses.append(Loss("effects", "ICC profile not kept"))
                 rendered = image.convert("RGBA").resize(size, Image.Resampling.LANCZOS)
                 for page in pages:
                     out = dst.with_name(f"{dst.stem}-{page:04d}.png")
-                    rendered.save(out, dpi=(dpi, dpi))
+                    rendered.save(out, dpi=(dpi, dpi), icc_profile=None)
                     outputs.append(out)
         except OSError as exc:
             raise EngineFailed(f"lib export_pages: {exc}") from exc
-        return Report("export_pages", policy, self.name, self.version(), outputs)
+        return Report("export_pages", policy, self.name, self.version(), outputs, losses)
 
 
 engine = LibEngine()

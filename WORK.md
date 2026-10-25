@@ -124,3 +124,23 @@ Official references consulted: [uv workspaces](https://docs.astral.sh/uv/concept
   check found 59 files already formatted; pytest: **115 passed, 1 skipped in 26.52s**.
   Installed distribution metadata also confirms all six Apache-2.0 license
   expressions and both direct pypdf requirements. No remaining requested failures.
+
+## Task 6 fix round 2
+
+- Re-read amended SPEC §1.2 and §5. No commits or spec/vendor changes.
+- R2-1: changed working files survive inspection and caller-body failures. Completed
+  edits are registered before inspection; inspection errors propagate with the old
+  page size, as documented in the context manager docstring. Failed bodies retain
+  changed files without modifying the document. Three inspection-error cases and
+  one body-error case failed before this change, then passed.
+- R2-2: added explicit fidelity-request/editable-only fallback and fidelity-priority
+  cases, both asserting the subsequent outline pass. Existing code passed; in-memory
+  mutations removing fallback or reversing priority were both detected by the tests.
+- R2-3: editable PNG export raises the specified UnsupportedRoute before output;
+  Page.render still uses fidelity. R2-4: PNG/JPG rendering explicitly drops ICC
+  metadata and records the specified effects loss only when a profile exists.
+  These policy/profile regressions failed before the fixes and now pass.
+- R2-5: removed unused Fake capabilities from native target-format tests and added
+  a byte-for-byte native-copy assertion. Focused checks: 25 passed in 0.44s.
+- Final gates: Ruff check passed; 60 files already formatted; pytest:
+  **126 passed, 1 skipped in 27.81s**. The skipped test requires the optional MCP SDK.

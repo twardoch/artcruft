@@ -67,6 +67,10 @@ def previews(doc: Document, root: Path) -> Report:
 
 @contextmanager
 def edit_in(page: Page, engine: str):
+    """Register changed edits before inspection; inspection errors retain the old size and propagate.
+
+    A failed body leaves the document unchanged but preserves a changed working file.
+    """
     native = {
         "photocraft": {"png", "jpg", "psd", "pcraft"},
         "vectorcraft": {"svg", "ai", "vectorcraft", "pdf"},
@@ -115,10 +119,13 @@ def edit_in(page: Page, engine: str):
                 raise UnsupportedRoute(f"No single-page editable route: {fmt} -> {formats[engine]}")
             convert(source.path, path, policy="editable")
         before = digest(path)
-        yield path
-        after = digest(path)
-        if after != before:
-            size = inspect_file(path)[index]
+        try:
+            yield path
+        finally:
+            retained = True
+            after = digest(path)
+            retained = after != before
+        if retained:
             asset = Asset(
                 identifier(),
                 path,
@@ -130,9 +137,8 @@ def edit_in(page: Page, engine: str):
             )
             doc.assets[asset.id] = asset
             page.source = {"asset": asset.id, "index": index}
-            page.size = size
             page.preview = None
-            retained = True
+            page.size = inspect_file(path)[index]
     finally:
         if not retained:
             path.unlink(missing_ok=True)

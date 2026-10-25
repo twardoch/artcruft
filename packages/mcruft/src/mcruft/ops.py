@@ -87,6 +87,8 @@ def export(
             reports = pdf_pages(doc, selected, dst, fonts, policy)
             outputs = [dst]
         case ".png":
+            if policy != "fidelity":
+                raise UnsupportedRoute("raster targets accept only fidelity")
             reports, outputs = png_pages(doc, selected, dst, dpi)
         case ".svg":
             if len(selected) != 1:

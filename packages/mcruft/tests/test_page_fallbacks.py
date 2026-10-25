@@ -85,3 +85,30 @@ def test_raster_convert_both_policies(isolated, tmp_path):
     for policy in ("editable", "fidelity"):
         report = mcruft.convert(source, tmp_path / f"{policy}.pdf", policy=policy)
         assert report.policy == policy and fake.calls[-1][3] == "fidelity"
+
+
+@pytest.mark.parametrize("has_fidelity", [False, True])
+def test_fidelity_page_export_route_order_then_outline(isolated, tmp_path, has_fidelity):
+    caps = [
+        ("inspect", "one", "one", "editable"),
+        ("export_pages", "one", "pdf", "editable"),
+        ("outline_text", "pdf", "pdf", "fidelity"),
+    ]
+    if has_fidelity:
+        caps.append(("export_pages", "one", "pdf", "fidelity"))
+    fake = Fake(*caps)
+    fake.inspect = lambda path: [(100, 200)]
+    registry.register(fake)
+    source = tmp_path / "source.one"
+    writer = PdfWriter()
+    writer.add_blank_page(100, 200)
+    writer.write(source)
+    output = tmp_path / "outlined.pdf"
+    report = mcruft.open(source).export(output, policy="fidelity", fonts="outline")
+    expected = "fidelity" if has_fidelity else "editable"
+    assert [(c[0], c[3]) for c in fake.calls] == [
+        ("export_pages", expected),
+        ("outline_text", "fidelity"),
+    ]
+    assert len(PdfReader(output).pages) == 1
+    assert report.outputs == [output] and report.policy == "fidelity"

@@ -6,6 +6,12 @@ this_file: CHANGELOG.md
 
 ## Unreleased
 
+- Preserve changed working files across edit/inspection failures; register completed
+  edits before inspection and propagate inspection errors with the old page size.
+- Refuse editable PNG export, retain fixed-fidelity page rendering, and report an
+  effects loss when raster rendering drops an ICC profile.
+- Cover editable export fallback, fidelity route priority and the subsequent outline
+  pass; remove unused conversion fakes from native-copy tests.
 - Support raster pages in PDF exports/previews and DPI-aware PNG export; apply the
   requested-policy, editable-policy and single-page conversion fallbacks.
 - Keep native editable assets and page indexes during edit handoffs; refresh edited
