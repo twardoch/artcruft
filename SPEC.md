@@ -152,7 +152,7 @@ ops: convert, export_pages, outline_text, build_deck, extract_pages, combine   (
 | png, jpg | lib: Pillow | one page, px → pt via DPI |
 | vectorcraft, ai | cli: `vectorcraft-cli info` | artboards |
 | psd, pcraft | cli: `photocraft-cli info` | one page |
-| idml, designcraft | deferred (no structured info command verified) | – |
+| idml, designcraft | cli: `designcraft-cli run --in X --cmd document.inspect` | pages |
 
 ## 5. Conversion and export matrix (MVP)
 
