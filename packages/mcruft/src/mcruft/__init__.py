@@ -4,6 +4,7 @@ from pathlib import Path
 from .engines.base import Capability, Engine, EngineInfo
 from .engines.registry import engines
 from .model import Asset, Document, Frame, Media, Page, merge
+from .ops import convert
 from .package import load, refresh, save
 from .report import (
     EngineFailed,
@@ -31,6 +32,7 @@ __all__ = [
     "Media",
     "PackageError",
     "Page",
+    "Policy",
     "Report",
     "UnsupportedRoute",
     "UnsupportedSchema",
@@ -60,10 +62,6 @@ def open(path: Path | str) -> Document:
     doc = new(path.stem)
     doc.add_file(path)
     return doc
-
-
-def convert(src: Path | str, dst: Path | str, *, policy: Policy) -> Report:
-    raise NotImplementedError("Conversion routes require Task 6")
 
 
 def convert_editable(src: Path | str, dst: Path | str) -> Report:

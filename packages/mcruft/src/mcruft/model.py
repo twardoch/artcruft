@@ -8,6 +8,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Literal
 from uuid import uuid4
+from weakref import ref
 
 from .report import Policy, Report
 
@@ -52,10 +53,14 @@ class Page:
     frames: list[Frame] = field(default_factory=list)
 
     def render(self, path: Path | str, dpi: int = 150) -> Report:
-        raise NotImplementedError("Page rendering requires Task 6")
+        from .ops import render
+
+        return render(self, path, dpi)
 
     def edit_in(self, engine: str):
-        raise NotImplementedError("Page editing requires Task 6")
+        from .editing import edit_in
+
+        return edit_in(self, engine)
 
 
 @dataclass
@@ -75,6 +80,10 @@ class Document:
     pages: list[Page] = field(default_factory=list)
     media: list[Media] = field(default_factory=list)
     path: Path | None = None
+
+    def __post_init__(self) -> None:
+        for page in self.pages:
+            page._document = ref(self)
 
     def add_file(self, path: Path | str) -> list[Page]:
         from .engines.registry import inspect_file
@@ -96,6 +105,7 @@ class Document:
         ]
         self.assets[asset.id] = asset
         self.pages.extend(pages)
+        self.__post_init__()
         return pages
 
     def remove_pages(self, indexes: list[int]) -> None:
@@ -135,7 +145,9 @@ class Document:
         fonts: str | None = None,
         dpi: int = 150,
     ) -> Report:
-        raise NotImplementedError("Document export requires Task 6")
+        from .ops import export
+
+        return export(self, path, policy=policy, pages=pages, fonts=fonts, dpi=dpi)
 
 
 def merge(docs: list[Document]) -> Document:
@@ -155,4 +167,5 @@ def merge(docs: list[Document]) -> Document:
             media.id, media.asset = identifier(), mapping[media.asset]
         result.pages.extend(copy.pages)
         result.media.extend(copy.media)
+    result.__post_init__()
     return result

@@ -5,6 +5,7 @@ import os
 import shutil
 import tempfile
 import warnings
+from copy import deepcopy
 from dataclasses import asdict, replace
 from importlib.metadata import version
 from itertools import count
@@ -58,8 +59,6 @@ def copy_asset(asset: Asset, root: Path) -> Path:
 
 
 def save(doc: Document, path: Path | str | None = None, *, previews: bool = False) -> Report:
-    if previews:
-        raise NotImplementedError("Preview generation requires Task 6")
     if path is None and doc.path is None:
         raise PackageError("An unsaved document needs a package path")
     root = Path(path if path is not None else doc.path).absolute()
@@ -68,8 +67,23 @@ def save(doc: Document, path: Path | str | None = None, *, previews: bool = Fals
     try:
         root.mkdir(parents=True, exist_ok=True)
         manifest = member(root, "manifest.json")
+        staged = Document(
+            deepcopy(doc.meta), dict(doc.assets), deepcopy(doc.pages), doc.media, doc.path
+        )
+        report = Report("save")
+        if previews:
+            from .editing import previews as generate_previews
+
+            report = generate_previews(staged, root)
+        referenced = {page.preview for page in staged.pages}
+        staged.assets = {
+            key: asset
+            for key, asset in staged.assets.items()
+            if asset.role != "preview" or key in referenced
+        }
         assets = {
-            key: replace(asset, path=copy_asset(asset, root)) for key, asset in doc.assets.items()
+            key: replace(asset, path=copy_asset(asset, root))
+            for key, asset in staged.assets.items()
         }
         meta = {**doc.meta, "modified": timestamp()}
         data = {
@@ -81,7 +95,7 @@ def save(doc: Document, path: Path | str | None = None, *, previews: bool = Fals
                 for key, asset in assets.items()
             },
             "pages": [
-                {k: v for k, v in asdict(page).items() if k != "frames"} for page in doc.pages
+                {k: v for k, v in asdict(page).items() if k != "frames"} for page in staged.pages
             ],
             "media": [asdict(m) for m in doc.media],
         }
@@ -102,7 +116,10 @@ def save(doc: Document, path: Path | str | None = None, *, previews: bool = Fals
     except (OSError, ValueError, KeyError, TypeError) as exc:
         raise PackageError(f"Cannot save package {root}: {exc}") from exc
     doc.path, doc.assets, doc.meta = root, assets, meta
-    return Report("save", outputs=[manifest])
+    for page, staged_page in zip(doc.pages, staged.pages):
+        page.preview = staged_page.preview
+    report.outputs = [manifest]
+    return report
 
 
 def load(path: Path | str) -> Document:

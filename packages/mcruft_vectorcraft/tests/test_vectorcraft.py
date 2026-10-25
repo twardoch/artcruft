@@ -32,6 +32,8 @@ def test_declared_routes(tmp_path):
             assert engine.inspect(src) == [(96, 48)]
         else:
             report = engine.run(cap.op, src, dst, policy=cap.policy, pages=[0], dpi=144)
+            if cap.op == "export_pages" and cap.dst == "png":
+                dst = dst.with_name(f"{dst.stem}-0000.png")
             assert report.outputs == [dst]
             assert dst.stat().st_size > 0
             if cap.dst == "pdf":
@@ -58,6 +60,17 @@ def test_declared_routes(tmp_path):
     assert {
         (c.op, c.src, c.dst, c.policy) for c in engine.capabilities() if c.verified_with
     } <= exercised
+
+
+def test_export_svg_png_page_contract(tmp_path):
+    src = tmp_path / "input.svg"
+    src.write_text('<svg xmlns="http://www.w3.org/2000/svg" width="96pt" height="48pt"/>')
+    report = engine.run(
+        "export_pages", src, tmp_path / "page.png", policy="fidelity", pages=[0], dpi=72
+    )
+    assert report.outputs == [tmp_path / "page-0000.png"]
+    with Image.open(report.outputs[0]) as image:
+        assert image.size == (96, 48)
 
 
 def test_page_order_duplicates_and_warnings(tmp_path):

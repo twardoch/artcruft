@@ -2,7 +2,7 @@
 from importlib.metadata import entry_points
 from pathlib import Path
 
-from ..report import McruftError, Policy, UnsupportedRoute
+from ..report import EngineUnavailable, McruftError, Policy, UnsupportedRoute
 from .base import Capability, Engine, EngineInfo
 
 _registered: dict[str, Engine] = {}
@@ -23,9 +23,14 @@ def route(
 ) -> tuple[Engine, Capability]:
     if policy not in ("editable", "fidelity"):
         raise UnsupportedRoute(f"Unknown policy: {policy}")
+    available_engines = discover()
+    if engine is not None and not any(
+        e.name == engine and e.available() for e in available_engines
+    ):
+        raise EngineUnavailable(f"Engine unavailable: {engine}")
     candidates = [
         (e, cap)
-        for e in discover()
+        for e in available_engines
         if (engine is None or e.name == engine) and e.available()
         for cap in e.capabilities()
         if (cap.op, cap.src, cap.dst, cap.policy) == (op, src_fmt, dst_fmt, policy)

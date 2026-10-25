@@ -33,6 +33,7 @@ class VectorcraftEngine(CliEngine):
             for dst in ("pdf", "svg")
         ]
         routes += [("export_pages", src, "pdf", "editable") for src in ("vectorcraft", "svg", "ai")]
+        routes += [("export_pages", src, "png", "fidelity") for src in ("vectorcraft", "svg", "ai")]
         routes += [("inspect", ext, ext, "editable") for ext in ("vectorcraft", "ai", "eps")]
         return [Capability(*row, f"{self.PRODUCT}-cli {self.MIN_VERSION}") for row in routes]
 
@@ -70,6 +71,25 @@ class VectorcraftEngine(CliEngine):
         elif op == "export_pages":
             count = len(json.loads(self.call(["info", src]))["artboards"])
             pages = page_indexes(opts.get("pages"), count)
+            if dst.suffix.lower() == ".png":
+                report.outputs = []
+                for page in pages:
+                    out = dst.with_name(f"{dst.stem}-{page:04d}.png")
+                    self.call(
+                        [
+                            "convert",
+                            src,
+                            out,
+                            "--artboard",
+                            str(page),
+                            "--scale",
+                            str(pixel_scale(opts.get("dpi", 150))),
+                        ],
+                        report,
+                    )
+                    report.outputs.append(out)
+                report.losses.append(Loss("raster", "vector artwork rasterised"))
+                return report
             if len(set(pages)) != len(pages):
                 # --range drops duplicates; join single-artboard exports to retain them.
                 with TemporaryDirectory(dir=dst.parent) as directory, PdfWriter() as writer:

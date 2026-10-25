@@ -41,7 +41,7 @@ def test_route_when_multiple_engines_then_verified_kind_order_and_pinning(monkey
     registry._registered.pop("native")
     assert registry.route("convert", "a", "b", "editable")[0].name == "lib"
     assert registry.route("convert", "a", "b", "editable", "cli")[0].name == "cli"
-    with pytest.raises(UnsupportedRoute):
+    with pytest.raises(mcruft.EngineUnavailable):
         registry.route("convert", "a", "b", "editable", "absent")
     with pytest.raises(UnsupportedRoute):
         registry.route("convert", "a", "b", "fidelity")
