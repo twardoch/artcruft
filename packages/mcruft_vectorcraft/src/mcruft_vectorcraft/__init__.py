@@ -8,6 +8,14 @@ from mcruft.engines.cli import CliEngine, page_indexes, pixel_scale
 from mcruft.report import Loss, Policy, Report
 from pypdf import PdfReader, PdfWriter
 
+try:
+    from .__version__ import __version__ as __version__
+except ImportError:
+    from importlib.metadata import version
+
+    __version__ = version("mcruft-vectorcraft")
+
+
 CONVERSIONS = [
     ("svg", "pdf", "editable"),
     ("svg", "png", "fidelity"),

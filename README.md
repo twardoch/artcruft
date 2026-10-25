@@ -87,10 +87,13 @@ These are not in the MVP:
 
 ## Development
 
-```bash
-uv run ruff check . && uv run ruff format --check .
-uv run pytest -q          # real-CLI tests skip when a CLI is missing
-```
+`./install.sh` installs all workspace packages and extras for development.
+`./build.sh` rebuilds six wheels and six sdists in `dist/` (no CLI bundles or native crate).
+Run `uv run ruff check .`, `uv run ruff format --check .` and `uv run pytest -q` before release.
+`./release.sh [patch|minor|major]` gates a clean tree, stamps the changelog, commits/tags/pushes via gitnextver and uploads GitHub assets.
+`./publish.sh [patch|minor|major]` releases an untagged HEAD or checks a tagged HEAD, then builds and uploads to PyPI.
+Publishing uses `UV_PUBLISH_TOKEN` (or `PYPI_TOKEN` from `~/.env` when needed).
+Tag pushes (`vMAJOR.MINOR.PATCH`) and manual release dispatch run the release workflow; PyPI is skipped without its token.
 
 - How agents work on this repo: [docs/workflow.md](docs/workflow.md).
 - Research behind the design: [docs/research/](docs/research/).

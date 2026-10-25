@@ -18,6 +18,13 @@ from .report import (
     UnsupportedSchema,
 )
 
+try:
+    from .__version__ import __version__ as __version__
+except ImportError:
+    from importlib.metadata import version
+
+    __version__ = version("mcruft")
+
 __all__ = [
     "Asset",
     "Capability",
@@ -36,6 +43,7 @@ __all__ = [
     "Report",
     "UnsupportedRoute",
     "UnsupportedSchema",
+    "__version__",
     "convert",
     "convert_editable",
     "convert_fidelity",

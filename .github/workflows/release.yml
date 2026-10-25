@@ -1,0 +1,60 @@
+# this_file: .github/workflows/release.yml
+name: Release
+on:
+  push:
+    tags: ['v[0-9]+.[0-9]+.[0-9]+']
+  workflow_dispatch:
+    inputs:
+      bump:
+        type: choice
+        options: [patch, minor, major]
+        default: patch
+        required: true
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v6
+      - name: Configure release identity
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+      - run: uv sync --locked --all-packages --all-extras
+      - name: Release a new version
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          BUMP: ${{ inputs.bump }}
+        run: |
+          if [[ "$GITHUB_REF" != refs/heads/main ]]; then
+            echo '::error::Manual releases run only from main.'
+            exit 1
+          fi
+          ./release.sh "$BUMP"
+      - name: Release an existing tag
+        if: github.event_name == 'push'
+        run: |
+          source lib/guard.sh
+          require_clean
+          TAG=$(require_tagged_head)
+          run_gates
+          ./build.sh
+          require_clean
+          github_release "$TAG"
+      - name: Publish to PyPI when configured
+        env:
+          UV_PUBLISH_TOKEN: ${{ secrets.UV_PUBLISH_TOKEN }}
+        run: |
+          if [[ -z "$UV_PUBLISH_TOKEN" ]]; then
+            echo '::notice::UV_PUBLISH_TOKEN is empty; skipping PyPI upload.'
+            exit 0
+          fi
+          source lib/guard.sh
+          verify_dist_version "$(require_tagged_head)"
+          uv publish --check-url https://pypi.org/simple/ dist/*

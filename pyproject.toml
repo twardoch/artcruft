@@ -18,4 +18,4 @@ target-version = "py312"
 
 [tool.pytest.ini_options]
 testpaths = ["packages"]
-addopts = "--import-mode=importlib --basetemp=.cache/pytest"
+addopts = "--import-mode=importlib"
