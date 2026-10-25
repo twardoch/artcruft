@@ -168,7 +168,7 @@ ops: convert, export_pages, outline_text, build_deck, extract_pages, combine   (
 | pdf → png | ✗ | ✓ pdfcraft `render --page N`; ~ lib pypdfium2 |
 | pdf → pdf (outlined) | n/a | ✓ outline pass, 1-page and 4-page inputs |
 | pdf → psd | ✗ layers not rebuilt | ✓ vectorcraft `convert` |
-| png → pdf | ✗ | ✓ photocraft `convert` |
+| png → pdf | as fidelity (an image has no structure to keep, so both policies use the same route; no Loss) | ✓ photocraft `convert` |
 | png ↔ psd, psd → pcraft | ✓ photocraft `convert` | same |
 | idml/designcraft → pdf, png, pptx | ~ designcraft `run --in --export` (✓ from `--sample` only) | ~ same + outline pass |
 | pages → pptx deck | ✗ no verified pdf→editable-slide route | ✓ render pages to PNG, deckcraft `run` with blank slides + full-bleed `insert.picture` |
@@ -187,10 +187,20 @@ through, for example CMYK conversion of RGB images.
 `doc.export(path, policy=…)` over pages from several assets proceeds as follows:
 
 1. Group consecutive pages by source asset.
-2. Export each asset's pages to PDF with the route for that policy.
+2. Export each asset's pages to PDF. mcruft tries, in order:
+   - `export_pages` with the requested policy;
+   - `export_pages` with the editable policy (the fidelity variant is the outline pass in step 5);
+   - for single-page sources, `convert` to PDF.
+
+   Raster sources (png, jpg, psd, pcraft) use their only route, which is fidelity, for both
+   policies (see the png → pdf row).
 3. Extract the needed page indexes (pypdf).
-4. Combine in document order (pypdf).
+4. Combine in document order (pypdf) into a temporary file in the target directory.
 5. If `fonts="outline"`, run the outline pass on the result.
+6. Move the result onto the target with `os.replace`. A failed export leaves no file at the
+   target. A target path that is one of the document's assets is refused (`PackageError`).
+   `Page.render` and PNG export write through a temporary directory and never touch other files
+   next to the target.
 
 `policy="fidelity"` implies `fonts="outline"` and `policy="editable"` implies `fonts="embed"`.
 The caller may override `fonts`. A `.png` target writes `stem-0000.png`, and so on, one per page;
@@ -229,8 +239,16 @@ includes the stderr tail and the command line), `UnsupportedSchema`, `PackageErr
 
 MVP: **page-level only.** `with page.edit_in("photocraft") as path:`
 
-1. Exports the page to that engine's editable format: image page → `.psd`, vector or PDF page →
-   `.vectorcraft`, slide → single-slide `.pptx`.
+1. Produces a working file that the engine can edit.
+   - If the engine natively reads the source asset's format (DeckCraft: pptx/deckcraft;
+     PhotoCraft: png/jpg/psd/pcraft; VectorCraft: svg/ai/vectorcraft/pdf; PdfCraft: pdf;
+     DesignCraft: idml/designcraft), the working file is a copy of the whole asset, and the page
+     keeps its index.
+   - Otherwise the page is converted once, with the **editable** policy, to the engine's format:
+     PhotoCraft gets `.psd`, VectorCraft `.vectorcraft`, PdfCraft a single-page `.pdf`. The page
+     index becomes 0.
+   - If no editable route exists, mcruft raises `UnsupportedRoute`. It never hands over a
+     rasterised picture as an "editable" page.
 2. Yields the path for the caller (CLI, MCP session or GUI) to edit.
 3. On exit, if the hash changed, adds the file as a `derived` asset with provenance and points
    `page.source` at it. Later exports use the edited asset, and the preview is dropped.
