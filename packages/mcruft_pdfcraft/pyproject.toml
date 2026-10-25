@@ -11,6 +11,7 @@ bundled = ["mcruft-pdfcraft-bin"]
 
 [project.entry-points."mcruft.engines"]
 pdfcraft = "mcruft_pdfcraft:engine"
+pdfcraft_native = "mcruft_pdfcraft.native:engine"
 
 [tool.uv.sources]
 mcruft = { workspace = true }

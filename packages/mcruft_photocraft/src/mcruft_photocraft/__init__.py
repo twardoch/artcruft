@@ -4,7 +4,7 @@ from pathlib import Path
 
 from mcruft.engines.base import Capability
 from mcruft.engines.cli import CliEngine
-from mcruft.report import Policy, Report
+from mcruft.report import Loss, Policy, Report
 
 CONVERSIONS = [
     ("png", "psd", "editable"),
@@ -14,6 +14,11 @@ CONVERSIONS = [
     ("pcraft", "png", "fidelity"),
     ("png", "pdf", "fidelity"),
     ("jpg", "pdf", "fidelity"),
+    ("psd", "pdf", "fidelity"),
+    ("pcraft", "pdf", "fidelity"),
+    ("png", "psd", "fidelity"),
+    ("jpg", "psd", "fidelity"),
+    ("psd", "pcraft", "fidelity"),
 ]
 
 
@@ -40,6 +45,8 @@ class PhotocraftEngine(CliEngine):
         src, dst = Path(src), Path(dst)
         self.check_route(op, src, dst, policy)
         report = self.report(op, policy, [dst])
+        if src.suffix.lower() in (".psd", ".pcraft") and dst.suffix.lower() in (".png", ".pdf"):
+            report.losses.append(Loss("effects", "layers flattened"))
         self.call(["convert", src, dst], report)
         return report
 

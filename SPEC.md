@@ -224,6 +224,7 @@ doc.refresh() -> Report
 
 doc.export(path, *, policy, pages=None, fonts=None, dpi=150) -> Report      # .pdf, .png, .svg (1 page), .pptx
 mcruft.convert(src, dst, *, policy) -> Report
+# Without a convert capability, use export_pages at the same policy: multi-page PNG outputs are stem-NNNN.png; a single page writes exactly dst.
 mcruft.convert_editable(src, dst) -> Report   # == convert(policy="editable")
 mcruft.convert_fidelity(src, dst) -> Report   # == convert(policy="fidelity")
 page.render(path, dpi=150) -> Report          # always fidelity

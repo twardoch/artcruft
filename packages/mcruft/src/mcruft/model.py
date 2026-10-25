@@ -8,7 +8,6 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Literal
 from uuid import uuid4
-from weakref import ref
 
 from .report import Policy, Report
 
@@ -83,7 +82,7 @@ class Document:
 
     def __post_init__(self) -> None:
         for page in self.pages:
-            page._document = ref(self)
+            page._document = self
 
     def add_file(self, path: Path | str) -> list[Page]:
         from .engines.registry import inspect_file
@@ -121,7 +120,10 @@ class Document:
     def split(self) -> list[Document]:
         return [
             Document(
-                deepcopy(self.meta), deepcopy(self.assets), [deepcopy(page)], deepcopy(self.media)
+                deepcopy(self.meta),
+                deepcopy(self.assets),
+                [deepcopy(page, {id(self): None})],
+                deepcopy(self.media),
             )
             for page in self.pages
         ]

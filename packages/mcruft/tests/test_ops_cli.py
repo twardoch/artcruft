@@ -116,3 +116,19 @@ def test_real_mixed_raster_document(real_doc, tmp_path):
     for page, output in zip(loaded.pages, report.outputs):
         with Image.open(output) as image:
             assert image.size == tuple(round(v) for v in page.size)
+
+
+def test_real_convert_pdf_and_pptx_to_png(real_doc, tmp_path):
+    _, deck = real_doc
+    pdf = tmp_path / "slides.pdf"
+    mcruft.convert_editable(deck, pdf)
+    for source in (pdf, deck):
+        target = tmp_path / f"converted-{source.suffix[1:]}.png"
+        report = mcruft.convert_fidelity(source, target)
+        assert report.outputs == [target.with_name(f"{target.stem}-{i:04d}.png") for i in range(2)]
+        hashes = []
+        for path in report.outputs:
+            with Image.open(path) as image:
+                assert image.size == (300, 150)
+            hashes.append(digest(path))
+        assert hashes[0] != hashes[1], "Different source pages must render differently"

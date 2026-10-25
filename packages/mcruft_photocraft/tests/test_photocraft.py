@@ -1,4 +1,5 @@
 # this_file: packages/mcruft_photocraft/tests/test_photocraft.py
+import mcruft
 import pytest
 from mcruft import UnsupportedRoute
 from mcruft.engines.cli import run_cli
@@ -41,3 +42,37 @@ def test_declared_routes(tmp_path):
     assert {
         (c.op, c.src, c.dst, c.policy) for c in engine.capabilities() if c.verified_with
     } <= exercised
+
+
+@pytest.mark.parametrize("fmt", ["psd", "pcraft"])
+def test_layered_page_pdf_export_and_previews(tmp_path, fmt):
+    from mcruft_vectorcraft import engine as vectorcraft
+
+    if not vectorcraft.available():
+        pytest.skip("vectorcraft-cli required for fidelity PDF outlining")
+    png = tmp_path / "input.png"
+    Image.new("RGB", (96, 48), "red").save(png)
+    psd = tmp_path / "input.psd"
+    run_cli([engine.binary(), "convert", png, psd])
+    source = psd
+    if fmt == "pcraft":
+        source = tmp_path / "input.pcraft"
+        run_cli([engine.binary(), "convert", psd, source])
+    doc = mcruft.open(source)
+    for policy in ("editable", "fidelity"):
+        target = tmp_path / f"{policy}.pdf"
+        report = doc.export(target, policy=policy)
+        assert len(PdfReader(target).pages) == 1
+        assert b"/FontFile" not in target.read_bytes(), (
+            "Flattened image pages must not depend on fonts"
+        )
+        assert any(
+            (loss.kind, loss.detail) == ("effects", "layers flattened") for loss in report.losses
+        )
+    report = engine.run("convert", source, tmp_path / "flat.png", policy="fidelity")
+    assert any(
+        (loss.kind, loss.detail) == ("effects", "layers flattened") for loss in report.losses
+    )
+    doc.save(tmp_path / "doc.mcruft", previews=True)
+    loaded = mcruft.load(doc.path)
+    assert len(PdfReader(loaded.assets[loaded.pages[0].preview].path).pages) == 1

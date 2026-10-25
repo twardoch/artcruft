@@ -6,6 +6,14 @@ this_file: CHANGELOG.md
 
 ## Unreleased
 
+- Support PSD/pcraft PDF export and previews, report flattened layers, and expose
+  matching PhotoCraft fidelity conversions.
+- Fall back from whole-file conversion to same-policy page export with consistent
+  single-page and numbered multi-page PNG outputs.
+- Keep page owners alive and route PDF extraction/combination through the optional
+  PdfCraft native adapter when installed.
+- Include a redistribution NOTICE in every bundled CLI wheel and warn when upstream
+  licence files were not supplied.
 - Preserve changed working files across edit/inspection failures; register completed
   edits before inspection and propagate inspection errors with the old page size.
 - Refuse editable PNG export, retain fixed-fidelity page rendering, and report an

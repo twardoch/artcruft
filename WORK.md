@@ -144,3 +144,28 @@ Official references consulted: [uv workspaces](https://docs.astral.sh/uv/concept
   a byte-for-byte native-copy assertion. Focused checks: 25 passed in 0.44s.
 - Final gates: Ruff check passed; 60 files already formatted; pytest:
   **126 passed, 1 skipped in 27.81s**. The skipped test requires the optional MCP SDK.
+
+## Final-review fix wave
+
+- Read the Important findings and named minors in the final review. All 13 focused
+  regression cases failed before the fixes. No commits or vendor edits.
+- F1: added PSD/pcraft fidelity PDF routes, flattening effects losses for PNG/PDF,
+  and matching fidelity image/native-format conversions. Real PSD/pcraft documents
+  now export under both policies and save one-page PDF previews. Raster-only PDF
+  exports skip outlining: their text is already flattened, and VectorCraft otherwise
+  fails with `Create Outlines: select text objects`. Tests verify no font dependency.
+- F2: conversion falls back to same-policy export_pages across all source pages;
+  single-page output uses exactly dst, multi-page PNG uses numbered names. Preserved
+  losses/warnings and composite outlining; editable PNG is refused. Added the one
+  requested SPEC §6 line and real PDF/PPTX-to-PNG checks.
+- F3: pages hold strong document references. Ownership is verified after GC,
+  deepcopy, split and merge; manifests continue to omit this in-memory link.
+- F4: registered the optional pdfcraft-native engine against the actual Rust
+  page_count/extract/combine signatures and removed library pins from PDF operations.
+  Missing-import and fake-module tests prove availability, signatures and native
+  routing priority, including document export. README lists the adapter.
+- F5: every CLI wheel has a hashed NOTICE with product/version/upstream/licence and
+  thinning statement. Supplied licence files are included; omission warns on stderr.
+- Full suite: **138 passed, 1 skipped in 26.81s**. Native adapter tests use a fake
+  extension; no native rebuild or wheel distribution. Optional MCP is skipped in
+  the base environment installed by the requested uv sync gate.

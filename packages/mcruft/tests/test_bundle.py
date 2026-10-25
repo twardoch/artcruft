@@ -9,8 +9,13 @@ import sys
 import zipfile
 from pathlib import Path
 
+import pytest
 
-def test_bundle_when_fake_binary_then_valid_wheel_and_record(tmp_path, monkeypatch):
+
+@pytest.mark.parametrize("with_licenses", [False, True])
+def test_bundle_when_fake_binary_then_valid_wheel_and_record(
+    tmp_path, monkeypatch, capsys, with_licenses
+):
     tool = Path(__file__).resolve().parents[3] / "tools/bundle_cli.py"
     spec = importlib.util.spec_from_file_location("bundle_cli", tool)
     module = importlib.util.module_from_spec(spec)
@@ -22,7 +27,11 @@ def test_bundle_when_fake_binary_then_valid_wheel_and_record(tmp_path, monkeypat
     licenses = tmp_path / "licenses"
     licenses.mkdir()
     (licenses / "LICENSE").write_text("Test license")
-    wheel = module.bundle("pdfcraft", binary, tmp_path, license_dir=licenses)
+    wheel = module.bundle(
+        "pdfcraft", binary, tmp_path, license_dir=licenses if with_licenses else None
+    )
+    warning = capsys.readouterr().err
+    assert ("warning" in warning.lower() and "license-dir" in warning) == (not with_licenses)
     assert wheel.name == "mcruft_pdfcraft_bin-0.13.0-py3-none-macosx_11_0_arm64.whl"
     with zipfile.ZipFile(wheel) as archive:
         info = "mcruft_pdfcraft_bin-0.13.0.dist-info"
@@ -36,7 +45,17 @@ def test_bundle_when_fake_binary_then_valid_wheel_and_record(tmp_path, monkeypat
                 assert int(size) == len(data)
         assert "Root-Is-Purelib: false" in archive.read(f"{info}/WHEEL").decode()
         assert "Name: mcruft-pdfcraft-bin" in archive.read(f"{info}/METADATA").decode()
-        assert archive.read(f"{info}/licenses/LICENSE") == b"Test license"
+        notice = archive.read(f"{info}/NOTICE").decode()
+        for expected in (
+            "pdfcraft",
+            "0.13.0",
+            "https://github.com/storytold/pdfcraft",
+            "MIT OR Apache-2.0",
+            "redistributed unmodified apart from lipo thinning",
+        ):
+            assert expected in notice
+        if with_licenses:
+            assert archive.read(f"{info}/licenses/LICENSE") == b"Test license"
         assert (
             archive.getinfo("mcruft_pdfcraft_bin/bin/pdfcraft-cli").external_attr >> 16 & 0o777
             == 0o755

@@ -111,7 +111,6 @@ def edit_in(page: Page, engine: str):
                     whole,
                     path,
                     "editable",
-                    engine="lib",
                     pages=[page.source["index"]],
                 )
         else:

@@ -48,6 +48,7 @@ mcruft never translates your files into a format of its own. See [SPEC.md](SPEC.
 | `mcruft-deckcraft` | `deckcraft-cli` | pptx/deckcraft, slide export to PDF/PNG, decks built from images |
 | `mcruft-photocraft` | `photocraft-cli` | png/jpg/psd/pcraft conversion |
 | `mcruft-pdfcraft` | `pdfcraft-cli` | page rendering and extraction |
+| `mcruft-pdfcraft` (`pdfcraft-native`) | optional `mcruft_pdfcraft_native` binding | native PDF extraction and combination |
 | `mcruft-designcraft` | `designcraft-cli` | idml/designcraft to pdf, pptx and png |
 
 The router picks an engine by capability, in the order verified, native, library, CLI, MCP.

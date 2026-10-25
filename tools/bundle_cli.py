@@ -9,6 +9,7 @@ import io
 import shutil
 import stat
 import subprocess
+import sys
 import tempfile
 import zipfile
 from pathlib import Path
@@ -77,6 +78,12 @@ def bundle(
             "if not BIN.stat().st_mode & 0o111:\n    BIN.chmod(BIN.stat().st_mode | 0o755)\n"
         )
         files = {
+            f"{info}/NOTICE": (
+                f"Product: {product}\nVersion: {version}\n"
+                f"Upstream: https://github.com/storytold/{product}\n"
+                "Licence: MIT OR Apache-2.0\n"
+                "This binary is redistributed unmodified apart from lipo thinning.\n"
+            ).encode(),
             f"{package}/__init__.py": init.encode(),
             f"{package}/bin/{product}-cli": copied.read_bytes(),
             f"{info}/METADATA": (
@@ -94,6 +101,11 @@ def bundle(
                 files[f"{info}/licenses/{path.relative_to(license_dir).as_posix()}"] = (
                     path.read_bytes()
                 )
+    else:
+        print(
+            "warning: no --license-dir supplied; upstream licence files are not included",
+            file=sys.stderr,
+        )
     record = io.StringIO(newline="")
     writer = csv.writer(record, lineterminator="\n")
     writer.writerows((name, wheel_hash(data), len(data)) for name, data in files.items())

@@ -10,7 +10,7 @@ from .engines import registry
 from .engines.base import normalize_format
 from .engines.cli import page_indexes, pixel_scale
 from .model import Document, Page
-from .page_ops import RASTER, destination, joined, pdf_pages, png_pages, run
+from .page_ops import RASTER, convert_pages, destination, joined, pdf_pages, png_pages, run
 from .report import Policy, Report, UnsupportedRoute
 
 
@@ -26,6 +26,8 @@ def convert(src: Path | str, dst: Path | str, *, policy: Policy) -> Report:
         raise ValueError("Source and destination resolve to the same path")
     destination(dst)
     s, d = normalize_format(src.suffix[1:]), normalize_format(dst.suffix[1:])
+    if d == "png" and policy != "fidelity":
+        raise UnsupportedRoute("raster targets accept only fidelity")
     route_policy = "fidelity" if s in RASTER and d == "pdf" else policy
     try:
         backend, _ = registry.route("convert", s, d, route_policy)
@@ -33,6 +35,12 @@ def convert(src: Path | str, dst: Path | str, *, policy: Policy) -> Report:
         backend = None
     if backend is not None:
         return replace(backend.run("convert", src, dst, policy=route_policy), policy=policy)
+    try:
+        backend, _ = registry.route("export_pages", s, d, policy)
+    except UnsupportedRoute:
+        backend = None
+    if backend is not None:
+        return convert_pages(src, dst, policy, backend)
     if policy == "fidelity" and d in ("pdf", "svg"):
         try:
             if s == d:
@@ -113,7 +121,7 @@ def export(
 
 
 def owner(page: Page) -> Document:
-    doc = getattr(page, "_document", lambda: None)()
+    doc = getattr(page, "_document", None)
     if doc is None:
         raise ValueError("Page must belong to a document")
     return doc

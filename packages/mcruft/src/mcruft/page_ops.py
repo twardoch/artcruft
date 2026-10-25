@@ -2,12 +2,13 @@
 """Ordered page pipelines and shared operation boundaries."""
 
 import os
+from dataclasses import replace
 from itertools import groupby
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from .engines import registry
-from .engines.base import normalize_format
+from .engines.base import Engine, normalize_format
 from .engines.cli import pixel_scale
 from .model import Document, Page
 from .report import PackageError, Policy, Report, UnsupportedRoute
@@ -41,12 +42,27 @@ def joined(op: str, policy: Policy | None, reports: list[Report], outputs: list[
     )
 
 
+def convert_pages(src: Path, dst: Path, policy: Policy, backend: Engine) -> Report:
+    pages = list(range(len(registry.inspect_file(src))))
+    outputs = (
+        [dst.with_name(f"{dst.stem}-{i:04d}.png") for i in pages]
+        if dst.suffix.lower() == ".png" and len(pages) > 1
+        else [dst]
+    )
+    with TemporaryDirectory(dir=dst.parent) as directory:
+        temporary = Path(directory) / f"pages{dst.suffix}"
+        report = backend.run("export_pages", src, temporary, policy=policy, pages=pages)
+        for source, target in zip(report.outputs, outputs, strict=True):
+            os.replace(source, target)
+    return replace(report, op="convert", outputs=outputs)
+
+
 def group_pdf(doc: Document, pages: list[Page], dst: Path, policy: Policy) -> list[Report]:
     source = doc.assets[pages[0].source["asset"]].path
     indexes = [p.source["index"] for p in pages]
     fmt = normalize_format(source.suffix[1:])
     if fmt == "pdf":
-        return [run("extract_pages", source, dst, "editable", engine="lib", pages=indexes)]
+        return [run("extract_pages", source, dst, "editable", pages=indexes)]
     policies = ["fidelity"] if fmt in RASTER else list(dict.fromkeys([policy, "editable"]))
     for candidate in policies:
         try:
@@ -64,9 +80,9 @@ def group_pdf(doc: Document, pages: list[Page], dst: Path, policy: Policy) -> li
         whole = dst.with_name(f"{dst.stem}-whole.pdf")
         return [
             backend.run("convert", source, whole, policy=candidate),
-            run("extract_pages", whole, dst, "editable", engine="lib", pages=indexes),
+            run("extract_pages", whole, dst, "editable", pages=indexes),
         ]
-    raise UnsupportedRoute(f"No PDF export route for {fmt} ({policy})")
+    raise UnsupportedRoute(f"No PDF export route for {fmt}; tried policies: {policies}")
 
 
 def pdf_pages(
@@ -79,8 +95,12 @@ def pdf_pages(
             reports.extend(group_pdf(doc, list(group), part, policy))
             parts.append(part)
         result = Path(directory) / "combined.pdf"
-        reports.append(run("combine", parts[0], result, "editable", engine="lib", paths=parts))
-        if fonts == "outline":
+        reports.append(run("combine", parts[0], result, "editable", paths=parts))
+        # Raster PDF routes flatten text already; VectorCraft cannot outline image-only pages.
+        raster_only = all(
+            normalize_format(doc.assets[p.source["asset"]].path.suffix[1:]) in RASTER for p in pages
+        )
+        if fonts == "outline" and not raster_only:
             outlined = Path(directory) / "outlined.pdf"
             reports.append(run("outline_text", result, outlined, "fidelity"))
             result = outlined

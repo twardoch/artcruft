@@ -50,8 +50,8 @@ def test_route_when_multiple_engines_then_verified_kind_order_and_pinning(monkey
 def test_discover_when_workspace_installed_then_finds_all_engines():
     names = {ep.name for ep in importlib.metadata.entry_points(group="mcruft.engines")}
     expected = {"lib", "vectorcraft", "deckcraft", "photocraft", "pdfcraft", "designcraft"}
-    assert names == expected
-    assert {engine.name for engine in registry.discover()} == expected
+    assert names == expected | {"pdfcraft_native"}
+    assert {engine.name for engine in registry.discover()} == expected | {"pdfcraft-native"}
 
 
 def test_engines_when_product_binaries_missing_then_reports_availability(monkeypatch, tmp_path):
@@ -59,7 +59,10 @@ def test_engines_when_product_binaries_missing_then_reports_availability(monkeyp
         monkeypatch.setenv(f"MCRUFT_{product.upper()}_CLI", str(tmp_path / "missing"))
     info = {engine.name: engine for engine in mcruft.engines()}
     assert info["lib"].available
-    assert all(not engine.available for name, engine in info.items() if name != "lib")
+    assert all(
+        not info[product].available
+        for product in ("vectorcraft", "deckcraft", "photocraft", "pdfcraft", "designcraft")
+    )
 
 
 def test_engines_when_product_version_fails_then_returns_all_entries(monkeypatch, tmp_path):
@@ -71,7 +74,7 @@ def test_engines_when_product_version_fails_then_returns_all_entries(monkeypatch
         monkeypatch.setenv(f"MCRUFT_{product.upper()}_CLI", str(tmp_path / "missing"))
     monkeypatch.setenv("MCRUFT_VECTORCRAFT_CLI", str(binary))
     info = {engine.name: engine for engine in mcruft.engines()}
-    assert info.keys() == products | {"lib"}
+    assert info.keys() == products | {"lib", "pdfcraft-native"}
     assert not info["vectorcraft"].available
     assert info["vectorcraft"].version is None
     assert info["vectorcraft"].capabilities
