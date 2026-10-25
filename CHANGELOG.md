@@ -6,6 +6,8 @@ this_file: CHANGELOG.md
 
 ## Unreleased
 
+## v0.1.1 (2026-10-25)
+
 - Add workspace build/install scripts, guarded GitHub/PyPI releases, CI and generated package versions.
 
 - Add optional `pdf`, `svg`, `psd` and combined `libs` extras. Prefer tested library
