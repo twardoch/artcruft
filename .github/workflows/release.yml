@@ -26,12 +26,17 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-      - run: uv sync --all-packages --all-extras
+      - run: uv sync --locked --all-packages --all-extras
       - name: Release a new version
         if: github.event_name == 'workflow_dispatch'
         env:
           BUMP: ${{ inputs.bump }}
-        run: ./release.sh "$BUMP"
+        run: |
+          if [[ "$GITHUB_REF" != refs/heads/main ]]; then
+            echo '::error::Manual releases run only from main.'
+            exit 1
+          fi
+          ./release.sh "$BUMP"
       - name: Release an existing tag
         if: github.event_name == 'push'
         run: |

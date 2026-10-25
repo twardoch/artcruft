@@ -11,6 +11,7 @@ if [[ $# -gt 1 || ! "$BUMP" =~ ^(patch|minor|major)$ ]]; then
 fi
 require_clean
 run_gates
+git fetch --tags --quiet
 NEXT=$(git tag | uvx --from gitnextver python -c '
 import sys
 from gitnextver.versioning import next_version
@@ -32,7 +33,10 @@ if not count:
     sys.exit("CHANGELOG.md must contain a ## Unreleased heading")
 path.write_text(text)
 PY
-TAG=$(uvx gitnextver --bump "$BUMP")
+if ! TAG=$(uvx gitnextver --bump "$BUMP"); then
+    git checkout -- CHANGELOG.md
+    exit 1
+fi
 if [[ "$TAG" != "$NEXT" ]]; then
     printf 'gitnextver returned %s; expected %s\n' "$TAG" "$NEXT" >&2
     exit 1
