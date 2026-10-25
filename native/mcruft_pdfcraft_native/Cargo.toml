@@ -1,0 +1,21 @@
+# this_file: native/mcruft_pdfcraft_native/Cargo.toml
+[package]
+name = "mcruft_pdfcraft_native"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = { version = "0.29", features = ["abi3-py312", "extension-module"] }
+pdfcraft-cos = { git = "https://github.com/storytold/pdfcraft", rev = "53199fb4fa36f3c95b539add6218c57aeb2f823c" }
+pdfcraft-organize = { git = "https://github.com/storytold/pdfcraft", rev = "53199fb4fa36f3c95b539add6218c57aeb2f823c" }
+
+[patch.crates-io]
+hayro = { git = "https://github.com/storytold/pdfcraft", rev = "53199fb4fa36f3c95b539add6218c57aeb2f823c" }
+hayro-interpret = { git = "https://github.com/storytold/pdfcraft", rev = "53199fb4fa36f3c95b539add6218c57aeb2f823c" }
+hayro-syntax = { git = "https://github.com/storytold/pdfcraft", rev = "53199fb4fa36f3c95b539add6218c57aeb2f823c" }
+hayro-jbig2 = { git = "https://github.com/storytold/pdfcraft", rev = "53199fb4fa36f3c95b539add6218c57aeb2f823c" }
+lopdf = { git = "https://github.com/storytold/pdfcraft", rev = "53199fb4fa36f3c95b539add6218c57aeb2f823c" }

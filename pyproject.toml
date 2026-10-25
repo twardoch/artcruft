@@ -1,0 +1,21 @@
+# this_file: pyproject.toml
+[tool.uv]
+# shortcut: binary distributions are unpublished, remove exclusions when wheels are available.
+exclude-dependencies = [
+  "mcruft-vectorcraft-bin", "mcruft-deckcraft-bin", "mcruft-photocraft-bin",
+  "mcruft-pdfcraft-bin", "mcruft-designcraft-bin",
+]
+
+[tool.uv.workspace]
+members = ["packages/*"]
+
+[dependency-groups]
+dev = ["pytest", "ruff"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.pytest.ini_options]
+testpaths = ["packages"]
+addopts = "--import-mode=importlib --basetemp=.cache/pytest"

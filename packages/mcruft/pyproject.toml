@@ -1,0 +1,39 @@
+# this_file: packages/mcruft/pyproject.toml
+[project]
+license = "Apache-2.0"
+name = "mcruft"
+dynamic = ["version"]
+requires-python = ">=3.12"
+dependencies = ["pypdf", "python-pptx", "Pillow"]
+
+[project.optional-dependencies]
+mcp = ["mcp"]
+pdf = ["pypdfium2"]
+svg = ["resvg-py"]
+psd = ["psd-tools"]
+libs = ["pypdfium2", "resvg-py", "psd-tools"]
+engines = [
+  "mcruft-vectorcraft", "mcruft-deckcraft", "mcruft-photocraft",
+  "mcruft-pdfcraft", "mcruft-designcraft",
+]
+
+[tool.uv.sources]
+mcruft-vectorcraft = { workspace = true }
+mcruft-deckcraft = { workspace = true }
+mcruft-photocraft = { workspace = true }
+mcruft-pdfcraft = { workspace = true }
+mcruft-designcraft = { workspace = true }
+
+[project.entry-points."mcruft.engines"]
+lib = "mcruft.engines.lib:engine"
+
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "vcs"
+fallback-version = "0.0.0"
+
+[tool.hatch.version.raw-options]
+root = "../.."
