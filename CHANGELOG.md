@@ -6,6 +6,8 @@ this_file: CHANGELOG.md
 
 ## Unreleased
 
+- Add the `mcruft[engines]` metapackage extra, which installs all five engine packages.
+
 - Support PSD/pcraft PDF export and previews, report flattened layers, and expose
   matching PhotoCraft fidelity conversions.
 - Fall back from whole-file conversion to same-policy page export with consistent

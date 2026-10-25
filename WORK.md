@@ -18,14 +18,16 @@ passed a whole-branch review followed by one fix wave.
   - It exports to PDF under both policies (fonts are embedded in editable and outlined in
     fidelity), and to PNG and PPTX.
   - Split, merge and both convert variants work.
-- **Bundled CLI wheel:** `tools/bundle_cli.py vectorcraft` writes a 51 MB arm64 wheel. It
-  installs, runs, and is found without `PATH`.
+- **Bundled CLI wheels:** all five products build arm64 wheels of 29–51 MB, each with a NOTICE.
+  They install and run `--version`. The VectorCraft one was also found without `PATH`.
+- **Metapackage:** `mcruft[engines]`, built from wheels into a clean venv, registers all seven
+  engines.
 - **Native binding:** `maturin build` produces an abi3 wheel. Once it is installed, the router
   sends PDF page extraction and combination to `pdfcraft-native`.
 
 ## Next
 
-- Task 7 (publish): push `mvp` and open a PR. Merging to main and uploading to PyPI need an owner
+- Task 7 (publish): `mvp` is pushed as PR #1. The slop-clean pass was skipped. Merging to main and uploading to PyPI need an owner
   decision.
 - Deferred minors: see the review notes summarised in the project CHANGELOG. They include:
   - Losses are not attributed to pages.

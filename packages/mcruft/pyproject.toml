@@ -8,6 +8,17 @@ dependencies = ["pypdf", "python-pptx", "Pillow"]
 
 [project.optional-dependencies]
 mcp = ["mcp"]
+engines = [
+  "mcruft-vectorcraft", "mcruft-deckcraft", "mcruft-photocraft",
+  "mcruft-pdfcraft", "mcruft-designcraft",
+]
+
+[tool.uv.sources]
+mcruft-vectorcraft = { workspace = true }
+mcruft-deckcraft = { workspace = true }
+mcruft-photocraft = { workspace = true }
+mcruft-pdfcraft = { workspace = true }
+mcruft-designcraft = { workspace = true }
 
 [project.entry-points."mcruft.engines"]
 lib = "mcruft.engines.lib:engine"

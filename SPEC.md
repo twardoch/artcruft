@@ -278,7 +278,8 @@ tools/bundle_cli.py              builds the mcruft-<product>-bin wheels
 ```
 
 - **Distributions.**
-  - `mcruft` (pure).
+  - `mcruft` (pure). This is the metapackage: `mcruft[engines]` pulls in the five
+    `mcruft-<product>` packages, and `mcruft[mcp]` adds the MCP SDK.
   - `mcruft-<product>` (pure, `py3-none-any`), each with a `[bundled]` extra that pulls in
     `mcruft-<product>-bin`.
   - `mcruft-<product>-bin`, a separate distribution: a platform wheel containing
@@ -296,6 +297,10 @@ tools/bundle_cli.py              builds the mcruft-<product>-bin wheels
 ## 10. Out of scope for the MVP
 
 - Batch-2 products.
+- Library engines beyond pypdf, python-pptx and Pillow. pypdfium2 (pdf → png), resvg-py
+  (svg → png) and psd-tools (PSD layers) were selected in `docs/research/native-libs.md`, but are
+  not wired in yet. Their routes are marked "~" in §5. The first to add is pypdfium2 pdf → png,
+  which removes a CLI dependency.
 - Text editing: the planned `frame.set_text(str)` routes to DeckCraft `text.set` and DesignCraft
   `story.setText`.
 - Frame-level write-back.

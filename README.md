@@ -62,14 +62,16 @@ then `PATH`. `engine.session()` opens the product's MCP server for interactive w
 The packages are not on PyPI yet. From a clone:
 
 ```bash
-uv sync --all-packages
+uv sync --all-packages --all-extras
 uv run python -c "import mcruft; print([(e.name, e.available) for e in mcruft.engines()])"
 ```
 
+`mcruft[engines]` is the metapackage: it installs the core and all five engine packages.
+
 The ArtCraft CLIs (macOS) come from the ArtCraft releases. To bundle one into its own wheel,
-run `uv run python tools/bundle_cli.py vectorcraft`. That writes a separate
-`mcruft_vectorcraft_bin-<version>-py3-none-macosx_11_0_arm64.whl` of about 54 MB with nothing
-to download at run time. `native/mcruft_pdfcraft_native` is a proof PyO3 binding to pinned
+run `uv run python tools/bundle_cli.py <product>`. That writes a separate
+`mcruft_<product>_bin-<version>-py3-none-macosx_11_0_arm64.whl` (29–51 MB) containing the
+binary and a NOTICE, with nothing to download at run time. `native/mcruft_pdfcraft_native` is a proof PyO3 binding to pinned
 PdfCraft crates, built with `maturin build`.
 
 ## Not yet
@@ -81,6 +83,9 @@ These are not in the MVP:
 - Video and audio operations. FilmCraft, EffectCraft and SoundCraft are in batch 2, along with
   WordCraft, FigCraft, CADCraft, GridCraft and LightCraft.
 - Linux and Windows binary wheels.
+- Library engines for pypdfium2, resvg-py and psd-tools. They were chosen in
+  [docs/research/native-libs.md](docs/research/native-libs.md) but are not wired in yet. The MVP's
+  library engine uses pypdf, python-pptx and Pillow.
 
 ## Development
 

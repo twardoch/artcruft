@@ -477,6 +477,13 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
+engines = [
+    { name = "mcruft-deckcraft" },
+    { name = "mcruft-designcraft" },
+    { name = "mcruft-pdfcraft" },
+    { name = "mcruft-photocraft" },
+    { name = "mcruft-vectorcraft" },
+]
 mcp = [
     { name = "mcp" },
 ]
@@ -484,11 +491,16 @@ mcp = [
 [package.metadata]
 requires-dist = [
     { name = "mcp", marker = "extra == 'mcp'" },
+    { name = "mcruft-deckcraft", marker = "extra == 'engines'", editable = "packages/mcruft_deckcraft" },
+    { name = "mcruft-designcraft", marker = "extra == 'engines'", editable = "packages/mcruft_designcraft" },
+    { name = "mcruft-pdfcraft", marker = "extra == 'engines'", editable = "packages/mcruft_pdfcraft" },
+    { name = "mcruft-photocraft", marker = "extra == 'engines'", editable = "packages/mcruft_photocraft" },
+    { name = "mcruft-vectorcraft", marker = "extra == 'engines'", editable = "packages/mcruft_vectorcraft" },
     { name = "pillow" },
     { name = "pypdf" },
     { name = "python-pptx" },
 ]
-provides-extras = ["mcp"]
+provides-extras = ["engines", "mcp"]
 
 [[package]]
 name = "mcruft-deckcraft"
