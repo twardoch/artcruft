@@ -8,7 +8,7 @@ this_file: DEPENDENCIES.md
 |---|---|
 | pypdf | Inspect, extract and combine PDF pages |
 | python-pptx | Inspect presentation slide dimensions/count |
-| Pillow | Inspect image dimensions and DPI |
+| Pillow | Inspect image dimensions/DPI and render raster pages at the requested DPI |
 | mcp (optional extra) | Official SDK stdio client |
 | hatchling + hatch-vcs | Pure Python builds and repository-derived versions |
 | pytest + ruff (dev group) | Offline tests, lint and formatting |
@@ -20,3 +20,4 @@ All PdfCraft crates and the five hayro/lopdf patches use release v0.13.0 commit
 No path dependencies reference vendor checkouts. The native extension is outside the uv
 workspace. CLI binary wheels are separate optional distributions and perform no downloads.
 Workspace exclusions for unpublished binary distributions are explained in WORK.md.
+VectorCraft and PdfCraft declare their direct `pypdf` imports as package dependencies.

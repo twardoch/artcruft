@@ -8,9 +8,12 @@ import tempfile
 from contextlib import contextmanager
 from pathlib import Path
 
+from .engines.base import normalize_format
+from .engines.registry import inspect_file
 from .model import Asset, Document, Page, identifier
-from .ops import convert, export, joined, owner
+from .ops import convert, export, owner
 from .package import digest, member
+from .page_ops import joined, run
 from .report import Report, UnsupportedRoute
 
 
@@ -64,40 +67,58 @@ def previews(doc: Document, root: Path) -> Report:
 
 @contextmanager
 def edit_in(page: Page, engine: str):
+    native = {
+        "photocraft": {"png", "jpg", "psd", "pcraft"},
+        "vectorcraft": {"svg", "ai", "vectorcraft", "pdf"},
+        "deckcraft": {"pptx", "deckcraft"},
+        "pdfcraft": {"pdf"},
+        "designcraft": {"idml", "designcraft"},
+    }
     formats = {
         "photocraft": "psd",
         "vectorcraft": "vectorcraft",
         "deckcraft": "pptx",
         "pdfcraft": "pdf",
+        "designcraft": "designcraft",
     }
     if engine not in formats:
         raise UnsupportedRoute(f"Unknown edit engine: {engine}")
     doc = owner(page)
-    index = next(i for i, candidate in enumerate(doc.pages) if candidate is page)
+    source = doc.assets[page.source["asset"]]
+    fmt = normalize_format(source.path.suffix[1:])
+    copied = fmt in native[engine]
+    index = page.source["index"] if copied else 0
     folder = (
         member(doc.path, "derived") if doc.path else Path(tempfile.mkdtemp(prefix="mcruft-edit-"))
     )
     folder.mkdir(parents=True, exist_ok=True)
-    path = folder / f"{identifier()}.{formats[engine]}"
+    suffix = source.path.suffix if copied else f".{formats[engine]}"
+    path = folder / f"{identifier()}{suffix}"
     retained = False
     try:
-        with tempfile.TemporaryDirectory(dir=folder) as directory:
-            pdf = Path(directory) / "page.pdf"
-            export(doc, pdf, policy="editable", pages=[index], fonts="embed")
-            if path.suffix == ".pdf":
-                pdf.replace(path)
-            elif path.suffix == ".pptx":
-                export(doc, path, policy="fidelity", pages=[index])
-            elif path.suffix == ".vectorcraft":
-                svg = Path(directory) / "page.svg"
-                convert(pdf, svg, policy="editable")
-                convert(svg, path, policy="editable")
-            else:
-                convert(pdf, path, policy="fidelity")
+        if copied:
+            shutil.copyfile(source.path, path)
+        elif formats[engine] == "pdf":
+            with tempfile.TemporaryDirectory(dir=folder) as directory:
+                whole = Path(directory) / "converted.pdf"
+                convert(source.path, whole, policy="editable")
+                run(
+                    "extract_pages",
+                    whole,
+                    path,
+                    "editable",
+                    engine="lib",
+                    pages=[page.source["index"]],
+                )
+        else:
+            if len(inspect_file(source.path)) != 1:
+                raise UnsupportedRoute(f"No single-page editable route: {fmt} -> {formats[engine]}")
+            convert(source.path, path, policy="editable")
         before = digest(path)
         yield path
         after = digest(path)
         if after != before:
+            size = inspect_file(path)[index]
             asset = Asset(
                 identifier(),
                 path,
@@ -108,7 +129,8 @@ def edit_in(page: Page, engine: str):
                 {"engine": engine, "op": "edit_in"},
             )
             doc.assets[asset.id] = asset
-            page.source = {"asset": asset.id, "index": 0}
+            page.source = {"asset": asset.id, "index": index}
+            page.size = size
             page.preview = None
             retained = True
     finally:

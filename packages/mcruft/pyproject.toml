@@ -1,5 +1,6 @@
 # this_file: packages/mcruft/pyproject.toml
 [project]
+license = "Apache-2.0"
 name = "mcruft"
 dynamic = ["version"]
 requires-python = ">=3.12"

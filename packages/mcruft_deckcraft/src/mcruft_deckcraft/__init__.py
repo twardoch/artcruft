@@ -39,7 +39,7 @@ class DeckcraftEngine(CliEngine):
         self.check_route(op, src, dst, policy)
         report = self.report(op, policy, [dst])
         if op == "build_deck":
-            images = [Path(p).absolute() for p in opts["images"]]
+            images = [Path(p).absolute() for p in opts.get("images") or []]
             if not images:
                 raise ValueError("build_deck requires at least one image")
             width, height = opts.get("size", (960, 540))

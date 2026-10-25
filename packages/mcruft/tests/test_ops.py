@@ -5,41 +5,9 @@ import pytest
 from mcruft.engines import registry
 from mcruft.engines.lib import engine as lib
 from mcruft.package import digest
-from PIL import Image
 from pypdf import PdfReader, PdfWriter
 
-
-class Fake(mcruft.Engine):
-    name, kind = "fake", "native"
-
-    def __init__(self, *caps):
-        self.caps, self.calls = caps, []
-
-    def available(self):
-        return True
-
-    def version(self):
-        return "1"
-
-    def capabilities(self):
-        return [mcruft.Capability(*c, "tested") for c in self.caps]
-
-    def run(self, op, src, dst, *, policy, **opts):
-        self.calls.append((op, src, dst, policy, opts))
-        outputs = [dst]
-        if dst.suffix == ".png":
-            outputs = [dst.with_name(f"{dst.stem}-{opts['pages'][0]:04d}.png")]
-            Image.new("RGB", (20, 30)).save(outputs[0])
-        else:
-            dst.write_bytes(src.read_bytes())
-        return mcruft.Report(op, policy, self.name, "1", outputs, [mcruft.Loss("layout", op)], [op])
-
-
-@pytest.fixture
-def isolated(monkeypatch):
-    monkeypatch.setattr(registry, "entry_points", lambda **kw: [])
-    monkeypatch.setattr(registry, "_registered", {})
-    registry.register(lib)
+from .fakes import Fake
 
 
 def test_convert_direct_composite_and_errors(isolated, tmp_path):
@@ -127,34 +95,6 @@ def test_save_previews_and_refresh(isolated, pdf, tmp_path):
     assert loaded.pages[0].preview != old
 
 
-@pytest.mark.parametrize("saved", [False, True])
-def test_edit_in_changed_unchanged_exception(isolated, pdf, tmp_path, saved):
-    doc = mcruft.open(pdf)
-    if saved:
-        doc.save(tmp_path / "doc.mcruft", previews=True)
-    page = doc.pages[1]
-    source, preview, assets = page.source.copy(), page.preview, set(doc.assets)
-    with page.edit_in("pdfcraft") as path:
-        assert len(PdfReader(path).pages) == 1
-        if saved:
-            assert path.parent == doc.path / "derived"
-    assert not path.exists()
-    assert page.source == source and page.preview == preview and set(doc.assets) == assets
-    with pytest.raises(RuntimeError), page.edit_in("pdfcraft") as failed:
-        failed.write_bytes(b"changed")
-        raise RuntimeError("abort")
-    assert page.source == source and set(doc.assets) == assets
-    with page.edit_in("pdfcraft") as changed:
-        changed.write_bytes(changed.read_bytes() + b"\nchanged")
-    asset = doc.assets[page.source["asset"]]
-    assert asset.path == changed and changed.is_file()
-    assert asset.role == "derived" and asset.derived_from == source["asset"]
-    assert asset.via == {"engine": "pdfcraft", "op": "edit_in"}
-    assert page.source["index"] == 0 and page.preview is None
-    doc.save(tmp_path / "edited.mcruft")
-    assert mcruft.load(doc.path).pages[1].source == page.source
-
-
 def test_convert_direct_fidelity_and_svg_via_pdf(isolated, tmp_path):
     fake = Fake(
         ("convert", "a", "pdf", "editable"),
@@ -230,33 +170,6 @@ def test_pin_unavailable_engine(isolated, name):
     registry.register(fake)
     with pytest.raises(mcruft.EngineUnavailable, match=name):
         registry.route("convert", "pdf", "svg", "editable", engine=name)
-
-
-@pytest.mark.parametrize(
-    "engine, suffix",
-    [
-        ("photocraft", ".psd"),
-        ("vectorcraft", ".vectorcraft"),
-        ("deckcraft", ".pptx"),
-        ("pdfcraft", ".pdf"),
-    ],
-)
-def test_edit_in_target_formats(isolated, pdf, tmp_path, engine, suffix):
-    registry.register(
-        Fake(
-            ("convert", "pdf", "psd", "fidelity"),
-            ("convert", "pdf", "svg", "editable"),
-            ("convert", "svg", "vectorcraft", "editable"),
-            ("export_pages", "pdf", "png", "fidelity"),
-            ("build_deck", "png", "pptx", "fidelity"),
-        )
-    )
-    doc = mcruft.open(pdf)
-    doc.save(tmp_path / "doc.mcruft")
-    with doc.pages[0].edit_in(engine) as path:
-        assert path.suffix == suffix and path.is_file()
-        path.write_bytes(path.read_bytes() + b"changed")
-    assert doc.assets[doc.pages[0].source["asset"]].via["engine"] == engine
 
 
 def test_invalid_export_options(isolated, pdf, tmp_path):

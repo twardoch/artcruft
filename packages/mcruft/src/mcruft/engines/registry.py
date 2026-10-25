@@ -3,7 +3,7 @@ from importlib.metadata import entry_points
 from pathlib import Path
 
 from ..report import EngineUnavailable, McruftError, Policy, UnsupportedRoute
-from .base import Capability, Engine, EngineInfo
+from .base import Capability, Engine, EngineInfo, normalize_format
 
 _registered: dict[str, Engine] = {}
 
@@ -23,6 +23,7 @@ def route(
 ) -> tuple[Engine, Capability]:
     if policy not in ("editable", "fidelity"):
         raise UnsupportedRoute(f"Unknown policy: {policy}")
+    src_fmt, dst_fmt = normalize_format(src_fmt), normalize_format(dst_fmt)
     available_engines = discover()
     if engine is not None and not any(
         e.name == engine and e.available() for e in available_engines
@@ -33,7 +34,8 @@ def route(
         for e in available_engines
         if (engine is None or e.name == engine) and e.available()
         for cap in e.capabilities()
-        if (cap.op, cap.src, cap.dst, cap.policy) == (op, src_fmt, dst_fmt, policy)
+        if (cap.op, normalize_format(cap.src), normalize_format(cap.dst), cap.policy)
+        == (op, src_fmt, dst_fmt, policy)
     ]
     if not candidates:
         raise UnsupportedRoute(

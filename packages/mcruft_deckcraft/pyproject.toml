@@ -1,5 +1,6 @@
 # this_file: packages/mcruft_deckcraft/pyproject.toml
 [project]
+license = "Apache-2.0"
 name = "mcruft-deckcraft"
 dynamic = ["version"]
 requires-python = ">=3.12"

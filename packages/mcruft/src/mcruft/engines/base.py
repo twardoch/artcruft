@@ -6,6 +6,10 @@ from typing import Literal
 from ..report import Policy, Report, UnsupportedRoute
 
 
+def normalize_format(fmt: str) -> str:
+    return {"jpeg": "jpg", "tif": "tiff"}.get(fmt.lower(), fmt.lower())
+
+
 @dataclass(frozen=True)
 class Capability:
     op: str

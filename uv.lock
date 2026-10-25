@@ -523,12 +523,14 @@ name = "mcruft-pdfcraft"
 source = { editable = "packages/mcruft_pdfcraft" }
 dependencies = [
     { name = "mcruft" },
+    { name = "pypdf" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "mcruft", editable = "packages/mcruft" },
     { name = "mcruft-pdfcraft-bin", marker = "extra == 'bundled'" },
+    { name = "pypdf" },
 ]
 provides-extras = ["bundled"]
 
@@ -551,12 +553,14 @@ name = "mcruft-vectorcraft"
 source = { editable = "packages/mcruft_vectorcraft" }
 dependencies = [
     { name = "mcruft" },
+    { name = "pypdf" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "mcruft", editable = "packages/mcruft" },
     { name = "mcruft-vectorcraft-bin", marker = "extra == 'bundled'" },
+    { name = "pypdf" },
 ]
 provides-extras = ["bundled"]
 

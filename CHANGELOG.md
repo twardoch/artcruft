@@ -6,6 +6,18 @@ this_file: CHANGELOG.md
 
 ## Unreleased
 
+- Support raster pages in PDF exports/previews and DPI-aware PNG export; apply the
+  requested-policy, editable-policy and single-page conversion fallbacks.
+- Keep native editable assets and page indexes during edit handoffs; refresh edited
+  page dimensions and refuse fidelity-only conversions.
+- Refuse exports onto assets, stage PDF exports atomically, preserve render siblings,
+  reject in-place conversion and report missing destination directories clearly.
+- Normalize JPEG/TIFF aliases, validate missing deck images, declare direct PDF
+  dependencies and add Apache-2.0 metadata to all six packages.
+- Implement core conversion policies, ordered PDF/PNG/SVG/PPTX exports, page rendering,
+  preview generation and page edit transactions on top of engine capabilities.
+- Raise EngineUnavailable for unavailable pinned engines; expose VectorCraft paged PNG
+  export with the standard output naming contract.
 - Prefer SVG absolute dimensions over viewBox and support centimetre dimensions.
 - Keep engine listing available when a product CLI fails its version check.
 - Scaffold the mcruft Python workspace and five separately distributed product engines.

@@ -13,3 +13,13 @@ def pdf(tmp_path: Path) -> Path:
     writer.add_blank_page(400, 500).rotate(90)
     writer.write(path)
     return path
+
+
+@pytest.fixture
+def isolated(monkeypatch):
+    from mcruft.engines import registry
+    from mcruft.engines.lib import engine
+
+    monkeypatch.setattr(registry, "entry_points", lambda **kw: [])
+    monkeypatch.setattr(registry, "_registered", {})
+    registry.register(engine)

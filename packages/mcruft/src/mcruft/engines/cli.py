@@ -10,7 +10,7 @@ import subprocess
 from pathlib import Path
 
 from ..report import EngineFailed, EngineUnavailable, Policy, Report, UnsupportedRoute
-from .base import Engine
+from .base import Engine, normalize_format
 
 
 def run_cli(argv: list[str | Path], timeout: float = 600) -> subprocess.CompletedProcess:
@@ -104,8 +104,8 @@ class CliEngine(Engine):
 
     def check_route(self, op: str, src: Path, dst: Path, policy: Policy) -> None:
         if op == "inspect" or not any(
-            (c.op, c.src, c.dst, c.policy)
-            == (op, src.suffix.lower()[1:], dst.suffix.lower()[1:], policy)
+            (c.op, normalize_format(c.src), normalize_format(c.dst), c.policy)
+            == (op, normalize_format(src.suffix[1:]), normalize_format(dst.suffix[1:]), policy)
             for c in self.capabilities()
         ):
             raise UnsupportedRoute(f"{self.name}: {op} {src.suffix} -> {dst.suffix} ({policy})")

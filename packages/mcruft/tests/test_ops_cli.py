@@ -91,3 +91,28 @@ def test_real_save_previews_reopen(real_doc, tmp_path):
         assert asset.via["policy"] == "editable"
         assert len(PdfReader(asset.path).pages) == 1
         assert b"/FontFile" in asset.path.read_bytes()
+
+
+def test_real_mixed_raster_document(real_doc, tmp_path):
+    doc, _ = real_doc
+    if not any(e.name == "photocraft" and e.available() for e in registry.discover()):
+        pytest.skip("photocraft-cli not installed")
+    png = tmp_path / "image.png"
+    Image.new("RGB", (96, 48), "red").save(png)
+    doc.add_file(png)
+    for policy in ("editable", "fidelity"):
+        output = tmp_path / f"mixed-{policy}.pdf"
+        doc.export(output, policy=policy)
+        assert len(PdfReader(output).pages) == 4
+    doc.save(tmp_path / "mixed.mcruft", previews=True)
+    loaded = mcruft.load(doc.path)
+    assert len(loaded.pages) == 4
+    for page in loaded.pages:
+        asset = loaded.assets[page.preview]
+        assert len(PdfReader(asset.path).pages) == 1
+        assert asset.sha256 == digest(asset.path)
+    report = loaded.export(tmp_path / "mixed.png", policy="fidelity", dpi=72)
+    assert len(report.outputs) == 4
+    for page, output in zip(loaded.pages, report.outputs):
+        with Image.open(output) as image:
+            assert image.size == tuple(round(v) for v in page.size)

@@ -64,3 +64,63 @@ Official references consulted: [uv workspaces](https://docs.astral.sh/uv/concept
   an environment-selected shell script that exits 1 on the version command.
 - Gates: Ruff check and format check passed; pytest: 43 passed, 1 optional MCP test skipped.
 - No commits; no conversion adapters or native code changed.
+
+## Task 6b: core orchestration
+
+- Added capability-routed direct/composite conversion and PDF/PNG/SVG/PPTX document
+  export in `ops.py`; model methods delegate to it. Every engine selection uses the
+  registry, including PDF extraction/combination and outline/deck passes.
+- Added exact-path page rendering and page edit transactions with derived-asset
+  provenance, unchanged-file cleanup and rollback on exceptions. Page ownership is
+  kept in memory and rebound after load, split and merge; manifests stay unchanged.
+- Added embedded-font PDF previews, regeneration for missing/stale previews and
+  removal of unused preview asset references. Preview relocation stages all pages
+  before replacing paths, preserving reordered pages. Save stages model changes
+  until the manifest replacement succeeds.
+- Fixed unavailable/unknown engine pins to raise EngineUnavailable.
+- Product-package exception: VectorCraft lacked `export_pages svg -> png (fidelity)`.
+  The real `test_export_svg_png_page_contract` failed with
+  `vectorcraft: export_pages .svg -> .png (fidelity)` before the fix. Added paged PNG
+  export using its existing convert/artboard/scale flags, with standard numbered
+  filenames; the declared-capability test exercises all three supported input types.
+- Baseline: 50 passed, 1 skipped in 19.78s. Pure orchestration tests: 21 passed.
+  Real acceptance checks verify mixed PPTX/SVG page counts, embedded versus outlined
+  fonts, both conversion helpers, PNG dimensions at 72 dpi, three image slides and
+  reopened preview PDF page counts/hashes. No remaining real-CLI route failures.
+- No new dependencies. No commits. SPEC.md, PLAN.md, AGENTS.md, docs/ and vendors
+  were not edited. Optional MCP and interactive GUI editing are outside these checks.
+- Sandbox invocation uses `UV_CACHE_DIR=/tmp/mcruft-uv-cache` because the default uv
+  cache is not writable here.
+- Final gates: `uv sync --all-packages` resolved 48 packages and checked 18;
+  Ruff check passed, format check found 51 files already formatted;
+  `uv run pytest -q`: **75 passed, 1 skipped in 19.85s** (optional MCP SDK absent).
+
+## Task 6 fix round 1
+
+- Re-read amended SPEC §5/§5.2/§7 and both Task 6 reviews. No spec, plan, agent-file
+  or vendor edits. No commits.
+- Before fixes: 39 focused regression cases failed, covering S1, asset protection,
+  atomic PDF output, render siblings, native edit copies/indexes, edited size,
+  in-place conversion, missing parents, image validation, JPEG and metadata.
+  Two further tests first failed for direct editable raster-to-PDF conversion and
+  single-page PdfCraft handoff from a multi-slide asset, then passed after fixes.
+- Split page pipelines into `page_ops.py` and split orchestration tests. Touched
+  Python modules remain below 200 lines. Fallbacks use declared capabilities;
+  raster pages use fidelity conversion under either policy without synthetic losses.
+  Pillow supplies DPI-aware raster page rendering through the lib engine.
+- Native edit handoffs copy whole assets and retain page indexes. Other handoffs
+  use one editable conversion; PDF results are extracted to the selected page.
+  Inspection updates page size only after successful edits.
+- Added a four-page real-CLI PPTX/SVG/PNG export/preview/PNG test. DeckCraft's PNG
+  selection was already correct: the new hash/order test passed before changes.
+  Forcing every render to slide 0 caused that test to fail as intended.
+- Added direct pypdf dependencies to VectorCraft/PdfCraft, license metadata to all
+  six packages, and shared JPEG/TIFF alias normalization (no TIFF routes invented).
+- A gate found three formatting-only comment-spacing differences in the current
+  README Python example; applied Ruff formatting to that file alone.
+- Baseline: 75 passed, 1 skipped in 22.39s. Core suite after fixes: 101 passed,
+  1 skipped in 24.72s. Optional MCP remains skipped; GUI editing is not exercised.
+- Final gates: sync resolved 48 packages/checked 18; Ruff check passed; format
+  check found 59 files already formatted; pytest: **115 passed, 1 skipped in 26.52s**.
+  Installed distribution metadata also confirms all six Apache-2.0 license
+  expressions and both direct pypdf requirements. No remaining requested failures.

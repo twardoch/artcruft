@@ -1,9 +1,10 @@
 # this_file: packages/mcruft_pdfcraft/pyproject.toml
 [project]
+license = "Apache-2.0"
 name = "mcruft-pdfcraft"
 dynamic = ["version"]
 requires-python = ">=3.12"
-dependencies = ["mcruft"]
+dependencies = ["mcruft", "pypdf"]
 
 [project.optional-dependencies]
 bundled = ["mcruft-pdfcraft-bin"]

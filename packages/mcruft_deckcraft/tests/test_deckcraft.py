@@ -1,4 +1,6 @@
 # this_file: packages/mcruft_deckcraft/tests/test_deckcraft.py
+import hashlib
+
 import pytest
 from mcruft import UnsupportedRoute
 from mcruft.engines.cli import run_cli
@@ -94,3 +96,22 @@ def test_declared_routes(tmp_path):
         )
     with pytest.raises(ValueError):
         engine.run("build_deck", png, tmp_path / "empty.pptx", policy="fidelity", images=[])
+
+
+def test_png_page_selection(tmp_path):
+    source = tmp_path / "selection.pptx"
+    deck = Presentation()
+    deck.slide_width, deck.slide_height = Pt(144), Pt(72)
+    for text in ("First slide", "Second slide"):
+        slide = deck.slides.add_slide(deck.slide_layouts[6])
+        slide.shapes.add_textbox(Pt(2), Pt(2), Pt(120), Pt(40)).text = text
+    deck.save(source)
+    hashes = []
+    for name, pages in (("forward", [0, 1]), ("reverse", [1, 0]), ("repeat", [1, 0, 1])):
+        report = engine.run(
+            "export_pages", source, tmp_path / f"{name}.png", policy="fidelity", pages=pages, dpi=72
+        )
+        hashes.append([hashlib.sha256(p.read_bytes()).hexdigest() for p in report.outputs])
+    assert hashes[0][0] != hashes[0][1], "Different slide text must render differently"
+    assert hashes[1] == hashes[0][::-1], "Selection order must be preserved"
+    assert hashes[2] == [hashes[0][1], hashes[0][0], hashes[0][1]]

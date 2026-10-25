@@ -11,11 +11,11 @@ ArtCraft apps, open-source clones of software with decades of cruft.
 import mcruft
 
 doc = mcruft.new("Talk")
-doc.add_file("deck.pptx")         # two slides -> two pages
-doc.add_file("poster.svg")        # one more page
+doc.add_file("deck.pptx")  # two slides -> two pages
+doc.add_file("poster.svg")  # one more page
 doc.save("Talk.mcruft", previews=True)
 
-doc.export("talk.pdf", policy="editable")   # selectable text, fonts embedded
+doc.export("talk.pdf", policy="editable")  # selectable text, fonts embedded
 doc.export("talk-print.pdf", policy="fidelity")  # fonts outlined, looks the same everywhere
 doc.export("talk.png", policy="fidelity", dpi=72)  # talk-0000.png, talk-0001.png, ...
 doc.export("talk-images.pptx", policy="fidelity")  # one picture per slide
