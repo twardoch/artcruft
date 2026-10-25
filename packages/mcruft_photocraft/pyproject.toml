@@ -29,3 +29,7 @@ root = "../.."
 
 [tool.hatch.build.hooks.vcs]
 version-file = "src/mcruft_photocraft/__version__.py"
+
+[tool.uv]
+# Rebuild editable installs when git state changes, so hatch-vcs metadata stays current.
+cache-keys = [{ file = "pyproject.toml" }, { git = { commit = true, tags = true } }]

@@ -6,6 +6,8 @@ this_file: CHANGELOG.md
 
 ## Unreleased
 
+- Rebuild editable workspace installs when the git commit or tags change (uv `cache-keys`), so local release gates see current hatch-vcs versions.
+
 ## v0.1.1 (2026-10-25)
 
 - Add workspace build/install scripts, guarded GitHub/PyPI releases, CI and generated package versions.
