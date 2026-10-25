@@ -6,6 +6,8 @@ this_file: CHANGELOG.md
 
 ## Unreleased
 
+- Add workspace build/install scripts, guarded GitHub/PyPI releases, CI and generated package versions.
+
 - Add optional `pdf`, `svg`, `psd` and combined `libs` extras. Prefer tested library
   routes for PDF/SVG PNG rendering and PSD inspection; serialize PDFium calls, honour
   page selection/DPI, and report rasterization losses and SVG system-font dependence.

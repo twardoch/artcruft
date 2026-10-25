@@ -4,6 +4,30 @@ this_file: WORK.md
 
 # Work status
 
+## Release tooling (2026-10-25)
+
+- Used the existing clean `release-tooling` branch at `main`/`v0.1.0` (`f9ebd84`).
+  Added six package descriptions, ignored hatch-vcs version files and version exports
+  with metadata fallbacks; no generated version file is tracked.
+- Added executable build/install/release/publish scripts, shared guards, CI and release
+  workflows. Releases stamp the changelog before gitnextver; publishing checks archive
+  metadata against the tag and loads credentials only when explicitly run.
+- Fresh-clone testing exposed the old `.cache/pytest` basetemp setting: pytest failed
+  without its parent directory. Removed the override to use pytest's default temp path.
+- `uv sync --all-packages --all-extras` and version imports passed. `./build.sh` produced
+  six wheels and six sdists, each wheel containing `__version__.py`; build left porcelain
+  status unchanged. Uncommitted local builds correctly carry a development version.
+- Baseline: 165 tests passed. Final gates: Ruff clean, 69 files formatted, **178 passed**.
+  `bash -n`, ShellCheck, actionlint and `git diff --check` passed.
+- End-to-end release ran only in a throwaway clone with a local bare origin and stubbed
+  `gh`: dirty-tree refusal passed; real gitnextver committed, tagged and pushed `v0.1.1`
+  there; changelog stamping, 12 release archives at `0.1.1` and clean-tree checks passed.
+  Existing-release upload and version-mismatch refusal also passed. No real repository
+  commit/tag/push, live release, publish, vendor edit or credential-file read occurred.
+- Sandbox-only uv cache/tool directories were redirected to `/tmp`; logs are
+  `/tmp/mcruft-release-transcript.log`, `/tmp/mcruft-build.log` and
+  `/tmp/mcruft-release-gates.log`. Hosted workflows and authenticated uploads are untested.
+
 ## Optional native-format libraries (2026-10-25)
 
 - Added core-only `pdf`, `svg`, `psd` and combined `libs` extras; `engines` still

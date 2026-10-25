@@ -293,8 +293,10 @@ tools/bundle_cli.py              builds the mcruft-<product>-bin wheels
   the installed CLI. Link only model, format, render and pdf-level crates. Copy only the `hayro`
   and `lopdf` `[patch.crates-io]` entries. The proof binding covers PdfCraft page count, extract
   and combine. It is built on demand (`maturin build`), not by `uv sync`.
-- **Publishing.** The MVP is published on GitHub only. PyPI uploads need an explicit owner
-  decision.
+- **Release tooling.** Six pure-Python workspace packages share canonical `vMAJOR.MINOR.PATCH`
+  tags and generated hatch-vcs version files. Clean-tree gates precede a changelog stamp and
+  gitnextver commit/tag/push, then GitHub assets and optional PyPI uploads. Bundled CLI wheels
+  and the native crate are excluded; tooling runs only when explicitly invoked.
 
 ## 10. Out of scope for the MVP
 
