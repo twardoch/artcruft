@@ -87,7 +87,7 @@ Talk.mcruft/
     "a1": {"path": "assets/deck.pptx", "media_type": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
             "sha256": "…", "role": "source"},
     "p0": {"path": "previews/page-0000.pdf", "media_type": "application/pdf", "sha256": "…", "role": "preview",
-            "derived_from": "a1", "via": {"engine": "deckcraft-cli", "engine_version": "0.10.0", "op": "export", "policy": "fidelity"}}
+            "derived_from": "a1", "via": {"engine": "deckcraft-cli", "engine_version": "0.10.0", "op": "export_pages", "policy": "editable"}}
   },
   "pages": [
     {"id": "pg0", "size": [960, 540], "source": {"asset": "a1", "index": 0}, "preview": "p0"}
@@ -117,8 +117,17 @@ An engine wraps one backend and declares capabilities:
 ```text
 Capability(op, src, dst, policy, verified_with: "<engine> <version>" | None, note)
 backend kinds: cli | mcp | native | lib
-ops: inspect, convert, export_pages, extract_pages, combine, outline_text, render
+ops: convert, export_pages, outline_text, build_deck, extract_pages, combine   (+ Engine.inspect(path))
 ```
+
+- `convert` turns a whole file into another format.
+- `export_pages` writes selected 0-based pages (`opts["pages"]`) into one PDF, or into one PNG
+  per page named `stem-NNNN.png` (`opts["dpi"]`).
+- `outline_text` is the VectorCraft pass in §5.1.
+- `build_deck` places PNGs on blank slides (DeckCraft).
+- `extract_pages` and `combine` are PDF page operations (lib: pypdf).
+- Composite routes (fidelity via the outline pass, pages → deck) live in the core, so no product
+  engine depends on another.
 
 - Routing picks, among the engines that are available and declare the capability: verified ones
   first, then the backend order `native > lib > cli > mcp`. `engine="…"` pins a choice. `lib`
@@ -198,7 +207,7 @@ doc.add_file(path) -> list[Page]              # copies the file in on save; appe
 doc.remove_pages(indexes); doc.move_page(i, to)
 doc.split() -> list[Document]                 # manifest-level: one doc per page, sharing asset files
 mcruft.merge(docs) -> Document                # manifest-level concatenation
-doc.save(path=None, previews=False) -> Report # previews = single-page PDFs (fidelity policy)
+doc.save(path=None, previews=False) -> Report # previews = single-page PDFs via the editable export (fonts embedded, no outline pass)
 doc.refresh() -> Report
 
 doc.export(path, *, policy, pages=None, fonts=None, dpi=150) -> Report      # .pdf, .png, .svg (1 page), .pptx
