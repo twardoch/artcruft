@@ -1,0 +1,12 @@
+# this_file: native/mcruft_pdfcraft_native/pyproject.toml
+[build-system]
+requires = ["maturin>=1,<2"]
+build-backend = "maturin"
+
+[project]
+name = "mcruft-pdfcraft-native"
+version = "0.0.0"
+requires-python = ">=3.12"
+
+[tool.maturin]
+module-name = "mcruft_pdfcraft_native"

@@ -1,0 +1,26 @@
+# this_file: packages/mcruft_photocraft/pyproject.toml
+[project]
+name = "mcruft-photocraft"
+dynamic = ["version"]
+requires-python = ">=3.12"
+dependencies = ["mcruft"]
+
+[project.optional-dependencies]
+bundled = ["mcruft-photocraft-bin"]
+
+[project.entry-points."mcruft.engines"]
+photocraft = "mcruft_photocraft:engine"
+
+[tool.uv.sources]
+mcruft = { workspace = true }
+
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "vcs"
+fallback-version = "0.0.0"
+
+[tool.hatch.version.raw-options]
+root = "../.."
