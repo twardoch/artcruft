@@ -14,8 +14,9 @@ Interpretations and limits:
 - Unsaved `add_file` retains an external reference until the first save (§6).
   On saved documents it copies immediately (§3); subsequent saves preserve asset bytes.
 - Asset paths are absolute in memory and relative POSIX paths in manifests.
-- SVG viewBox coordinates and unitless dimensions use CSS pixels (96/in), converted
-  to points (72/in). Explicit pt/mm/in dimensions are supported when no viewBox exists.
+- SVG absolute width/height take priority, supporting px/pt/mm/cm/in; unitless values
+  use CSS pixels (96/in), converted to points (72/in). Missing or percentage dimensions
+  fall back to viewBox coordinates, also treated as CSS pixels.
 - Non-conversion reports use policy `None`; hash mismatches on load emit UserWarning.
 - Composite fidelity capabilities retain the matrix's verification labels and notes
   explaining required outline/render passes. DesignCraft file-input routes are unverified.
@@ -53,3 +54,13 @@ Official references consulted: [uv workspaces](https://docs.astral.sh/uv/concept
 [python-pptx](https://python-pptx.readthedocs.io/en/latest/api/presentation.html),
 [Pillow](https://pillow.readthedocs.io/en/stable/handbook/image-file-formats.html),
 [PyO3](https://pyo3.rs/main/module.html), and the pinned PdfCraft source.
+
+## Scaffold fix round 1
+
+- I1: prefer absolute SVG dimensions over viewBox, including centimetres. Added one
+  parametrized regression test for A4, cm, unitless dimensions and viewBox fallbacks.
+- I2: engine listing catches McruftError from availability/version checks and marks
+  that engine unavailable without stopping discovery. Added one regression test with
+  an environment-selected shell script that exits 1 on the version command.
+- Gates: Ruff check and format check passed; pytest: 43 passed, 1 optional MCP test skipped.
+- No commits; no conversion adapters or native code changed.

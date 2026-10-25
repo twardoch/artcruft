@@ -2,7 +2,7 @@
 from importlib.metadata import entry_points
 from pathlib import Path
 
-from ..report import Policy, UnsupportedRoute
+from ..report import McruftError, Policy, UnsupportedRoute
 from .base import Capability, Engine, EngineInfo
 
 _registered: dict[str, Engine] = {}
@@ -45,6 +45,13 @@ def inspect_file(path: Path) -> list[tuple[float, float]]:
 
 
 def engines() -> list[EngineInfo]:
-    return [
-        EngineInfo(e.name, e.kind, e.available(), e.version(), e.capabilities()) for e in discover()
-    ]
+    result = []
+    for engine in discover():
+        try:
+            available, version = engine.available(), engine.version()
+        except McruftError:
+            available, version = False, None
+        result.append(
+            EngineInfo(engine.name, engine.kind, available, version, engine.capabilities())
+        )
+    return result

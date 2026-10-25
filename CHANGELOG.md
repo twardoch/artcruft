@@ -6,6 +6,8 @@ this_file: CHANGELOG.md
 
 ## Unreleased
 
+- Prefer SVG absolute dimensions over viewBox and support centimetre dimensions.
+- Keep engine listing available when a product CLI fails its version check.
 - Scaffold the mcruft Python workspace and five separately distributed product engines.
 - Implement native-asset folder packages, document assembly, engine routing, format
   inspection, pypdf page operations and optional MCP sessions.

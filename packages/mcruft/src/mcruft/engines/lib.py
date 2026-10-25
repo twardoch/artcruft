@@ -15,17 +15,18 @@ from .base import Capability, Engine
 
 def svg_size(path: Path) -> tuple[float, float]:
     root = ET.parse(path).getroot()
-    if "viewBox" in root.attrib:
+    dimensions = [root.get(axis, "").strip() for axis in ("width", "height")]
+    if "viewBox" in root.attrib and any(not value or value.endswith("%") for value in dimensions):
         values = [float(v) for v in re.split(r"[\s,]+", root.attrib["viewBox"].strip())]
         if len(values) != 4:
             raise UnsupportedRoute("SVG viewBox must have four numbers")
         size = values[2] * 0.75, values[3] * 0.75
     else:
-        units = {"": 0.75, "px": 0.75, "pt": 1, "mm": 72 / 25.4, "in": 72}
+        units = {"": 0.75, "px": 0.75, "pt": 1, "mm": 72 / 25.4, "cm": 72 / 2.54, "in": 72}
         size = []
         for axis in ("width", "height"):
             match = re.fullmatch(
-                r"\s*(\d*\.?\d+(?:[eE][+-]?\d+)?)\s*(px|pt|mm|in)?\s*", root.get(axis, "")
+                r"\s*(\d*\.?\d+(?:[eE][+-]?\d+)?)\s*(px|pt|mm|cm|in)?\s*", root.get(axis, "")
             )
             if match is None:
                 raise UnsupportedRoute("SVG requires viewBox or absolute width/height")

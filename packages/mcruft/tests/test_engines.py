@@ -62,6 +62,23 @@ def test_engines_when_product_binaries_missing_then_reports_availability(monkeyp
     assert all(not engine.available for name, engine in info.items() if name != "lib")
 
 
+def test_engines_when_product_version_fails_then_returns_all_entries(monkeypatch, tmp_path):
+    binary = tmp_path / "broken-cli"
+    binary.write_text("#!/bin/sh\nexit 1\n")
+    binary.chmod(0o755)
+    products = {"vectorcraft", "deckcraft", "photocraft", "pdfcraft", "designcraft"}
+    for product in products:
+        monkeypatch.setenv(f"MCRUFT_{product.upper()}_CLI", str(tmp_path / "missing"))
+    monkeypatch.setenv("MCRUFT_VECTORCRAFT_CLI", str(binary))
+    info = {engine.name: engine for engine in mcruft.engines()}
+    assert info.keys() == products | {"lib"}
+    assert not info["vectorcraft"].available
+    assert info["vectorcraft"].version is None
+    assert info["vectorcraft"].capabilities
+    assert info["lib"].available
+    assert info["lib"].version is not None
+
+
 def test_binary_when_env_then_overrides_bundle_and_path(tmp_path, monkeypatch):
     binary = tmp_path / "fake-cli"
     binary.write_text('#!/bin/sh\necho "fake 0.1.0"\n')
