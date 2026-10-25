@@ -170,6 +170,8 @@ ops: convert, export_pages, outline_text, build_deck, extract_pages, combine   (
 | pdf → psd | ✗ layers not rebuilt | ✓ vectorcraft `convert` |
 | png → pdf | as fidelity (an image has no structure to keep, so both policies use the same route; no Loss) | ✓ photocraft `convert` |
 | png ↔ psd, psd → pcraft | ✓ photocraft `convert` | same |
+| png/jpg page → png (`export_pages`) | ✗ | ✓ lib: Pillow (RGBA; ICC profile not kept, reported as Loss `effects`) |
+| any page → png (`export`, `render`) | ✗ raster targets accept only `fidelity`; `policy="editable"` raises `UnsupportedRoute` | ✓ per-source route |
 | idml/designcraft → pdf, png, pptx | ~ designcraft `run --in --export` (✓ from `--sample` only) | ~ same + outline pass |
 | pages → pptx deck | ✗ no verified pdf→editable-slide route | ✓ render pages to PNG, deckcraft `run` with blank slides + full-bleed `insert.picture` |
 | extract / combine pdf pages | ✓ lib: pypdf | same |
