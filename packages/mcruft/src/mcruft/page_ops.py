@@ -69,7 +69,10 @@ def group_pdf(doc: Document, pages: list[Page], dst: Path, policy: Policy) -> li
             backend, _ = registry.route("export_pages", fmt, "pdf", candidate)
         except UnsupportedRoute:
             continue
-        return [backend.run("export_pages", source, dst, policy=candidate, pages=indexes)]
+        report = backend.run("export_pages", source, dst, policy=candidate, pages=indexes)
+        if candidate != policy and fmt not in RASTER:
+            report.warnings.append(f"{fmt}: no {policy} page export; used {candidate}")
+        return [report]
     if len(registry.inspect_file(source)) != 1:
         raise UnsupportedRoute(f"No PDF page export for multi-page {fmt} ({policy})")
     for candidate in policies:

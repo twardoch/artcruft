@@ -100,8 +100,8 @@ Talk.mcruft/
 Rules:
 
 - **Write-once assets.** `add_file` copies the file into `assets/` once. If the name is taken, it
-  appends `-1`, `-2`, and so on. Saves never rewrite assets. Only `manifest.json` is written, via
-  a temporary file and `os.replace`, which is atomic. Saving to a new path copies the referenced
+  appends `-1`, `-2`, and so on. Saves never rewrite assets. `manifest.json` is written via a temporary file and `os.replace`,
+  which is atomic; `save(previews=True)` regenerates `previews/` before that. Saving to a new path copies the referenced
   assets there.
 - **Trust boundary on load.** Paths must be relative POSIX paths that stay inside the package after
   resolution. Absolute paths, `..`, and symlinks are rejected (`PackageError`). An unknown
@@ -140,7 +140,7 @@ ops: convert, export_pages, outline_text, build_deck, extract_pages, combine   (
   declared `min_version` adds a warning to the Report.
 - **MCP** (`[mcp]` extra, official `mcp` Python SDK): `engine.session()` opens
   `<product>-cli mcp` over stdio, with `--automation-read-root` and `--automation-write-root` set
-  to the package and temp dirs (VectorCraft also gets `--headless`). It exposes `call(tool, args)`.
+  to the roots the caller passes (VectorCraft also gets `--headless`). It exposes `call(tool, args)`.
   It is for interactive multi-step work; no MVP route depends on it. The MVP has one smoke test.
 
 ### Inspect (how pages are discovered)
@@ -285,8 +285,8 @@ tools/bundle_cli.py              builds the mcruft-<product>-bin wheels
   - `mcruft-<product>` (pure, `py3-none-any`), each with a `[bundled]` extra that pulls in
     `mcruft-<product>-bin`.
   - `mcruft-<product>-bin`, a separate distribution: a platform wheel containing
-    `mcruft_<product>_bin/bin/<product>-cli`, thinned to one architecture, plus the product's
-    LICENSE and ATTRIBUTION and a NOTICE.
+    `mcruft_<product>_bin/bin/<product>-cli`, thinned to one architecture, plus a NOTICE, and the
+    product's LICENSE and ATTRIBUTION when `--license-dir` supplies them (the builder warns otherwise).
   - The MVP builds `macosx_11_0_arm64` only. The arm64 VectorCraft wheel is about 54 MB, under
     PyPI's 100 MB default file limit; a universal one would not be.
 - **Native binding.** Pin every crate from one repo to the commit of the release tag that matches

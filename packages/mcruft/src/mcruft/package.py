@@ -39,9 +39,8 @@ def copy_asset(asset: Asset, root: Path) -> Path:
     directory = member(root, folder)
     directory.mkdir(parents=True, exist_ok=True)
     source = Path(asset.path).absolute()
-    if source.is_relative_to(root):
-        member(root, source.relative_to(root).as_posix())
-        return source
+    if source.resolve().is_relative_to(root.resolve()):
+        return member(root, source.resolve().relative_to(root.resolve()).as_posix())
     for number in count():
         suffix = f"-{number}" if number else ""
         target = member(root, f"{folder}/{source.stem}{suffix}{source.suffix}")

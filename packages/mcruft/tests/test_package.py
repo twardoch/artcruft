@@ -18,6 +18,15 @@ def test_save_when_round_trip_then_preserves_manifest(pdf, tmp_path):
     assert mcruft.open(doc.path).meta == loaded.meta
 
 
+def test_save_when_root_reached_via_symlink_then_reuses_assets(pdf, tmp_path):
+    doc = mcruft.open(pdf)
+    doc.save(tmp_path / "talk.mcruft")
+    (tmp_path / "alias").symlink_to(tmp_path)
+    loaded = mcruft.load(tmp_path / "alias" / "talk.mcruft")
+    loaded.save(tmp_path / "talk.mcruft")
+    assert [p.name for p in (tmp_path / "talk.mcruft" / "assets").iterdir()] == ["source.pdf"]
+
+
 def test_add_file_when_name_clashes_then_copies_once(pdf, tmp_path):
     doc = mcruft.open(pdf)
     doc.save(tmp_path / "talk.mcruft")

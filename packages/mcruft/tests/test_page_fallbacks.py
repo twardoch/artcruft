@@ -112,3 +112,5 @@ def test_fidelity_page_export_route_order_then_outline(isolated, tmp_path, has_f
     ]
     assert len(PdfReader(output).pages) == 1
     assert report.outputs == [output] and report.policy == "fidelity"
+    fell_back = any("used editable" in w for w in report.warnings)
+    assert fell_back is not has_fidelity, report.warnings
