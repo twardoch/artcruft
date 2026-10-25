@@ -22,7 +22,9 @@ The brief is `../issues/101.md`. Read it before planning anything.
 - The prebuilt CLIs are on PATH as `~/bin/craft-cli/<app>-cli`; the versioned zips are in `../vendors/storytold/craft-maccli/`. **Their flags differ per app**, so check `<app>-cli --help` instead of assuming one shape:
   - `vectorcraft-cli mcp` without `--headless` first tries to attach to a running GUI on 127.0.0.1. In tests, pass `--headless`, or a read/write root, which implies it.
   - `--automation-read-root` / `--automation-write-root` confine file access. If you omit the write root, the server can't write at all.
-  - `photocraft-cli` has no read/write-root flags. It uses `--bridge` and `--control-token` instead.
+  - `photocraft-cli mcp` takes the read/write roots too, but attaches to a running app with `--bridge <127.0.0.1:port>` (plus `--control-token`) rather than `--connect`.
+  - Batch syntax differs: `deckcraft-cli run --cmd 'id={json}'` versus `vectorcraft-cli run --cmd id --params '{json}'`. Index bases and rect conventions also differ per app (see `docs/research/products/README.md`).
+  - The installed CLIs (0.10–0.16) are newer than the local checkouts' workspace versions. CLI facts describe the binaries; crate facts describe the checkouts.
   - The user's MCP configs in `~/.claude.json` show the working launch line for each app.
 
 ## Agent tooling & cost
